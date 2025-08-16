@@ -25,7 +25,8 @@ SIMU5G_PROJECT_ROOT = "/home/felipe/Documentos/tcc/omnet/simu5g"
 CONFIG_NAME = "Toy1"
 INI_PATH = os.path.join(SIMU5G_PROJECT_ROOT, "simulations", "NR", "application01", "training_toy1_1.ini")
 
-RESULT_DIR = os.path.join(SIMU5G_PROJECT_ROOT, "results", CONFIG_NAME)
+# Novo: subpasta por potência (Pot6, Pot16, etc)
+RESULT_DIR = os.path.join(SIMU5G_PROJECT_ROOT, "results", CONFIG_NAME, f"Pot{TX_POWER}")
 LOG_DIR = os.path.join(RESULT_DIR, "logs")
 STATUS_PATH = os.path.join(RESULT_DIR, "status.json")
 FAILED_PATH = os.path.join(RESULT_DIR, "failed_runs.json")
@@ -45,15 +46,16 @@ def build_command(tx, rep):
               f"{SIMU5G_PROJECT_ROOT}/../inet4.5/showcases",
         "-l", "./out/gcc-release/src/libsimu5g.so",
         "-l", "../inet4.5/out/gcc-release/src/libINET.so",
-        f"--**.eNodeBTxPower={tx}dBm"
+        f"---MultiCell_SA_5cells_12BSs.gnb[*].cellularNic.phy.eNodeBTxPower={tx}dBm"  # <--- CORRECTED PATH
     ]
+
 
 # Função de simulação com tentativas e logging
 def run_simulation(rep):
     attempt = 0
     success = False
     log_file = os.path.join(LOG_DIR, f"log_TX{TX_POWER}_R{rep}.txt")
-    sca_file = os.path.join(RESULT_DIR, f"{CONFIG_NAME}/{TX_POWER}dBm-{rep}.sca")
+    sca_file = os.path.join(RESULT_DIR, f"{rep}.sca")
     start_time = time.time()
 
     while attempt < MAX_RETRIES and not success:
