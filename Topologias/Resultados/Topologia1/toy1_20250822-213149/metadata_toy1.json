@@ -1,0 +1,33 @@
+{
+  "sim": "toy1",
+  "clusters": [],
+  "dran_gnbs": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "ues_per_gnb": 10,
+  "tx_powers_dbm": [
+    20.0,
+    23.0,
+    26.0,
+    29.0,
+    32.0
+  ],
+  "energy_coeffs": {
+    "P_idle_DU": 80.0,
+    "P_idle_Xhaul": 10.0,
+    "k_proc_DU": 1.5,
+    "k_tx": 0.8
+  },
+  "comp_enabled": false,
+  "cus_off": true,
+  "generated_at": "20250822-213149",
+  "output_dir": "/home/felipe/Documentos/tcc/omnet/Topologias/Resultados/Topologia1/toy1_20250822-213149"
+}

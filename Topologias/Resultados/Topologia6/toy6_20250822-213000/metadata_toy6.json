@@ -1,0 +1,49 @@
+{
+  "sim": "toy6",
+  "clusters": [
+    {
+      "members": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "anchor_gnb": 6,
+      "anchor_cu": "CU1"
+    },
+    {
+      "members": [
+        10,
+        11,
+        12
+      ],
+      "anchor_gnb": 10,
+      "anchor_cu": "CU3"
+    }
+  ],
+  "dran_gnbs": [
+    4,
+    5
+  ],
+  "ues_per_gnb": 10,
+  "tx_powers_dbm": [
+    20.0,
+    23.0,
+    26.0,
+    29.0,
+    32.0
+  ],
+  "energy_coeffs": {
+    "P_idle_DU": 80.0,
+    "P_idle_CU": 120.0,
+    "P_idle_Xhaul": 10.0,
+    "k_proc_DU": 1.5,
+    "k_tx": 0.8
+  },
+  "comp_tuning": {
+    "th_gain_pct": 20.0,
+    "energy_overhead_w": 6.0
+  },
+  "generated_at": "20250822-213000",
+  "output_dir": "/home/felipe/Documentos/tcc/omnet/Topologias/Resultados/Topologia6/toy6_20250822-213000"
+}
