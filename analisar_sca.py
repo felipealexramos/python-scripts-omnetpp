@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, re, json, argparse, statistics
+import os, re, json, argparse, statistics, math
 from pathlib import Path
 from collections import defaultdict
 import matplotlib.pyplot as plt
@@ -55,22 +55,38 @@ def infer_power_from_name(path: Path):
     m = RE_PDBM_FROM_NAME.search(path.name)
     return int(m.group(1)) if m else None
 
+def _finite(vals):
+    """Retorna apenas valores finitos (ignora NaN/Inf)."""
+    return [v for v in vals if isinstance(v, (int, float)) and math.isfinite(v)]
+
 def to_mbps(values):
-    """Converte automaticamente para Mbps: se a mediana for >1e5 assume bps."""
-    if not values:
+    """Converte automaticamente para Mbps: se a mediana finita for >1e5 assume bps."""
+    vals = _finite(values)
+    if not vals:
         return []
-    med = statistics.median(values)
+    med = statistics.median(vals)
     if med > 1e5:             # heurística: parece bps
-        return [v/1e6 for v in values]
-    return values             # já era Mbps (ou valor normalizado)
+        return [v/1e6 for v in vals]
+    return vals               # já era Mbps (ou valor normalizado)
 
 def to_ms(values):
-    """Converte de segundos para ms (se os números parecerem segundos)."""
-    if not values:
+    """
+    Converte de segundos para ms (se os números parecerem segundos).
+    Importante: remove NaN/Inf antes de decidir a unidade e antes de devolver.
+    """
+    vals = _finite(values)
+    if not vals:
         return []
-    med = statistics.median(values)
+    med = statistics.median(vals)
     # se mediana < 10, provavelmente está em segundos → ms
-    return [v*1000.0 for v in values]
+    if med < 10.0:
+        return [v*1000.0 for v in vals]
+    return vals
+
+def safe_mean(values, default=0.0):
+    """Média ignorando NaN/Inf; retorna default se vazio."""
+    vals = _finite(values)
+    return (sum(vals)/len(vals)) if vals else default
 
 def parse_sca(sca: Path):
     text = sca.read_text(errors="ignore")
@@ -80,18 +96,19 @@ def parse_sca(sca: Path):
     ue_rx_mbps = to_mbps(ue_rx_vals)
     sum_rate_mbps = sum(ue_rx_mbps) if ue_rx_mbps else 0.0
 
-    # delay por UE
+    # delay por UE (média de frame delay na simulação, ignorando NaN/Inf)
     ue_delay_vals = [float(v) for (_, _, v) in RE_UE_DELAY.findall(text)]
-    ue_delay_ms = to_ms(ue_delay_vals)
-    mean_delay_ms = (sum(ue_delay_ms)/len(ue_delay_ms)) if ue_delay_ms else 0.0
+    ue_delay_ms = to_ms(ue_delay_vals)  # já vem filtrado
+    # média correta: divide apenas pelo número de UEs com valor finito
+    mean_delay_ms = safe_mean(ue_delay_ms, default=0.0)
 
     # processamento por gNB (GOPS)
     gnb_proc_vals = [float(v) for (_, v) in RE_GNB_PROC.findall(text)]
-    mean_proc_gops = (sum(gnb_proc_vals)/len(gnb_proc_vals)) if gnb_proc_vals else 0.0
+    mean_proc_gops = safe_mean(gnb_proc_vals, default=0.0)
 
     # proporção (opcional)
     gnb_prop_vals = [float(v) for (_, v) in RE_GNB_PROP.findall(text)]
-    mean_prop = (sum(gnb_prop_vals)/len(gnb_prop_vals)) if gnb_prop_vals else 0.0
+    mean_prop = safe_mean(gnb_prop_vals, default=0.0)
 
     p_dbm = infer_power_from_name(sca)
 
@@ -99,8 +116,8 @@ def parse_sca(sca: Path):
         "file": str(sca),
         "p_dbm": p_dbm,
         "sum_rate_mbps": sum_rate_mbps,     # soma das UEs (Mbps)
-        "mean_delay_ms": mean_delay_ms,     # média entre UEs (ms)
-        "mean_cnproc_gops": mean_proc_gops, # média (ou soma/gnb; aqui média) em GOPS
+        "mean_delay_ms": mean_delay_ms,     # média entre UEs (ms), ignorando NaN
+        "mean_cnproc_gops": mean_proc_gops, # média em GOPS
         "mean_cnprop": mean_prop
     }
 
@@ -122,6 +139,19 @@ def plot_scatter(xs, ys, xlabel, ylabel, title, out_png):
     plt.ylabel(ylabel)
     plt.title(title)
     plt.grid(True, linestyle=":")
+    plt.tight_layout()
+    plt.savefig(out_png, dpi=180)
+    plt.close()
+
+def plot_bar(labels, values, ylabel, title, out_png):
+    import numpy as np
+    x = np.arange(len(labels))
+    plt.figure(figsize=(9,4.6))
+    plt.bar(x, values)
+    plt.xticks(x, labels)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.grid(axis="y", linestyle=":", alpha=0.6)
     plt.tight_layout()
     plt.savefig(out_png, dpi=180)
     plt.close()
@@ -149,10 +179,10 @@ def process_topology(topology_dir: Path, out_dir: Path):
         agg[r["p_dbm"]]["prop"].append(r["mean_cnprop"])
 
     powers = sorted(agg.keys())
-    thp_series   = [statistics.mean(agg[p]["thp"])  if agg[p]["thp"]  else 0.0 for p in powers]
-    delay_series = [statistics.mean(agg[p]["dly"])  if agg[p]["dly"]  else 0.0 for p in powers]
-    proc_series  = [statistics.mean(agg[p]["proc"]) if agg[p]["proc"] else 0.0 for p in powers]
-    prop_series  = [statistics.mean(agg[p]["prop"]) if agg[p]["prop"] else 0.0 for p in powers]
+    thp_series   = [safe_mean(agg[p]["thp"],  default=0.0) for p in powers]
+    delay_series = [safe_mean(agg[p]["dly"],  default=0.0) for p in powers]
+    proc_series  = [safe_mean(agg[p]["proc"], default=0.0) for p in powers]
+    prop_series  = [safe_mean(agg[p]["prop"], default=0.0) for p in powers]
 
     # salva agregado por potência
     table = [
@@ -175,7 +205,7 @@ def process_topology(topology_dir: Path, out_dir: Path):
 
     # Potência × CNProcDemand
     plot_xy(powers, proc_series, "Potência (dBm)", "CNProcDemand médio (GOPS)",
-            f"{name}: Potência × CNProcDemand", out_dir/"potencia_vs_cnprocdemand.png")
+        f"{name}: Potência × CNProcDemand", out_dir/"potencia_vs_cnprocdemand.png")
 
     # Potência × Delay
     plot_xy(powers, delay_series, "Potência (dBm)", "Delay médio (ms)",
@@ -195,6 +225,17 @@ def process_topology(topology_dir: Path, out_dir: Path):
     plot_scatter(proc_series, thp_series,
                  "CNProcDemand médio (GOPS)", "Vazão média (Mbps)",
                  f"{name}: CNProcDemand × Vazão", out_dir/"cnproc_vs_vazao.png")
+
+    # ----------- Resumo geral da topologia (média ao longo de TODAS as potências) -----------
+    resume_geral = {
+        "topologia": name,
+        "vazao_media_mbps_todas_potencias": safe_mean(thp_series, default=0.0),
+        "delay_medio_ms_todas_potencias":   safe_mean(delay_series, default=0.0),
+        "cnproc_medio_gops_todas_potencias":safe_mean(proc_series, default=0.0),
+        "potencias_encontradas_dbm": powers
+    }
+    with open(out_dir/"resumo_geral_topologia.json","w") as f:
+        json.dump(resume_geral, f, indent=2, ensure_ascii=False)
 
     return {"name": name, "powers": powers, "thp": thp_series,
             "delay": delay_series, "proc": proc_series}
@@ -231,6 +272,52 @@ def grouped_bars_compare(topologies_data, power_ref, out_png):
     plt.savefig(out_png, dpi=180)
     plt.close()
 
+def overall_comparisons(topologies_data, out_root: Path):
+    """
+    Gera gráficos individuais (um por métrica) comparando Toy1..Toy6,
+    onde cada valor é a MÉDIA da métrica ao longo de TODAS as potências
+    disponíveis da topologia.
+    """
+    labels, mean_thp, mean_dly, mean_proc = [], [], [], []
+
+    for t in topologies_data:
+        if not t:
+            continue
+        labels.append(t["name"])
+        mean_thp.append(safe_mean(t["thp"], default=0.0))
+        mean_dly.append(safe_mean(t["delay"], default=0.0))
+        mean_proc.append(safe_mean(t["proc"], default=0.0))
+
+    # 1) Média de vazão × Topologias
+    plot_bar(labels, mean_thp,
+             "Vazão média (Mbps)",
+             "Média de Vazão (somando/agrupando todas as potências) × Topologias",
+             out_root/"comparacao_media_vazao_por_topologia.png")
+
+    # 2) Média de delay × Topologias
+    plot_bar(labels, mean_dly,
+             "Delay médio (ms)",
+             "Média de Delay (ignorando UEs NaN; agregando todas as potências) × Topologias",
+             out_root/"comparacao_media_delay_por_topologia.png")
+
+    # 3) Média de demanda de processamento × Topologias
+    plot_bar(labels, mean_proc,
+             "CNProcDemand médio (GOPS)",
+             "Média de Demanda de Processamento (todas as potências) × Topologias",
+             out_root/"comparacao_media_proc_por_topologia.png")
+
+    # Também salva um JSON resumo com essas comparações
+    resumo = []
+    for i, lab in enumerate(labels):
+        resumo.append({
+            "topologia": lab,
+            "vazao_media_mbps_todas_potencias": mean_thp[i],
+            "delay_medio_ms_todas_potencias":   mean_dly[i],
+            "cnproc_medio_gops_todas_potencias":mean_proc[i]
+        })
+    with open(out_root/"comparacao_media_por_topologia.json","w") as f:
+        json.dump(resumo, f, indent=2, ensure_ascii=False)
+
 def energy_from_resume(resume_json, energy_cfg):
     """
     Calcula Energia total (J) e Energia/bit (J/bit) usando parâmetros de um JSON:
@@ -251,8 +338,7 @@ def energy_from_resume(resume_json, energy_cfg):
     with open(resume_json) as f:
         rows = json.load(f)
 
-    # usar a média em todas as potências (ou filtrar antes)
-    # aqui retornaremos um dict por potência
+    # retorna um dict por potência
     en = {}
     for r in rows:
         thp = max(r["vazao_media_mbps"], 1e-12)
@@ -347,6 +433,9 @@ def main():
         [t for t in topologies_data if t], args.compare_power,
         out_root/f"comparacao_topologias_{args.compare_power}dBm.png"
     )
+
+    # NOVO: comparações individuais (média em TODAS as potências) × Topologias
+    overall_comparisons([t for t in topologies_data if t], out_root)
 
     # Energia × Topologia (se energy-cfg fornecido)
     if args.energy_cfg:

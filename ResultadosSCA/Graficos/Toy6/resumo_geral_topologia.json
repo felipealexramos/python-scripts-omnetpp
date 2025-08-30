@@ -1,0 +1,14 @@
+{
+  "topologia": "Toy6",
+  "vazao_media_mbps_todas_potencias": 17.9070001,
+  "delay_medio_ms_todas_potencias": 1726.890311105403,
+  "cnproc_medio_gops_todas_potencias": 213.255724552258,
+  "potencias_encontradas_dbm": [
+    6,
+    16,
+    26,
+    36,
+    46,
+    56
+  ]
+}
