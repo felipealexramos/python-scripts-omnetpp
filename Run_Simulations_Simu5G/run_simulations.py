@@ -8,7 +8,7 @@ from datetime import datetime
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 
-# ===== NOVO: imports para análise =====
+# ===== Análise / parsing =====
 import re, math
 import pandas as pd
 import matplotlib
@@ -19,7 +19,8 @@ import matplotlib.pyplot as plt
 # CLI
 # ---------------------------
 parser = argparse.ArgumentParser(description="Executa simulações OMNeT++ (Simu5G) e analisa os .sca gerados.")
-parser.add_argument("--tx", type=str, required=True, help="Potência de transmissão em dBm (ex: 26)")
+parser.add_argument("--tx", type=str, required=True,
+                    help='Potências de transmissão em dBm. Exemplos: "26" | "20,23,26" | "20 23 26"')
 parser.add_argument("--reps", type=int, default=1, help="Número de repetições (default: 1)")
 parser.add_argument("--threads", type=int, default=4, help="Processos paralelos (default: 4)")
 parser.add_argument("--skip-sim", action="store_true", help="Pula a simulação e roda apenas a análise dos .sca já existentes")
@@ -30,7 +31,11 @@ args = parser.parse_args()
 # ---------------------------
 # Config principais
 # ---------------------------
-TX_POWER = args.tx
+def parse_tx_list(raw: str):
+    parts = [p for p in re.split(r"[,\s]+", raw.strip()) if p]
+    return parts
+
+TX_POWERS = parse_tx_list(args.tx)
 NUM_REPETITIONS = args.reps
 NUM_PROCESSES = min(args.threads, cpu_count())
 MAX_RETRIES = 3
@@ -42,34 +47,37 @@ SIMU5G_PROJECT_ROOT = "/home/felipe/Documentos/tcc/omnet/simu5g"
 CONFIG_NAME = "TrainingToy1_1"
 INI_PATH = os.path.join(SIMU5G_PROJECT_ROOT, "simulations", "NR", "application02", "training_toy1_1.ini")
 
-# Resultados organizados por app/config/potência
-RESULT_DIR = os.path.join(SIMU5G_PROJECT_ROOT, "results", "NR", "application02", CONFIG_NAME, f"Pot{TX_POWER}")
-LOG_DIR = os.path.join(RESULT_DIR, "logs")
-STATUS_PATH = os.path.join(RESULT_DIR, "status.json")
-FAILED_PATH = os.path.join(RESULT_DIR, "failed_runs.json")
+# Base de resultados
+RESULT_BASE = os.path.join(SIMU5G_PROJECT_ROOT, "results", "NR", "application02", CONFIG_NAME)
 
-# Pasta de análise (pedido)
+def get_paths_for_tx(tx: str):
+    result_dir = os.path.join(RESULT_BASE, f"Pot{tx}")
+    log_dir = os.path.join(result_dir, "logs")
+    status_path = os.path.join(result_dir, "status.json")
+    failed_path = os.path.join(result_dir, "failed_runs.json")
+    return result_dir, log_dir, status_path, failed_path
+
 OUT_DIR = args.out
-os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # ---------------------------
 # Montagem do comando opp_run
 # ---------------------------
-def build_command(tx, rep):
+def build_command(tx: str, rep: int):
     """
     Gera o comando completo para o opp_run.
     - Aplica potência nas gNBs (*.gnb[*].cellularNic.phy.eNodeBTxPower)
     - Aplica potência nos UEs (**.ueTxPower)
     - Redireciona resultados para RESULT_DIR (--result-dir)
     """
+    result_dir, _, _, _ = get_paths_for_tx(tx)
     return [
         os.path.join(OMNETPP_BIN_DIR, "opp_run"),
         "-r", str(rep),
         "-m", "-u", "Cmdenv",
         "-c", CONFIG_NAME,
         "-f", INI_PATH,
-        "--result-dir", RESULT_DIR,
+        "--result-dir", result_dir,
         "-n", (
             f"{SIMU5G_PROJECT_ROOT}/src:"
             f"{SIMU5G_PROJECT_ROOT}/simulations:"
@@ -86,48 +94,52 @@ def build_command(tx, rep):
 # ---------------------------
 # Execução de uma simulação (com tentativas)
 # ---------------------------
-def run_simulation(rep):
+def run_job(job):
+    tx, rep = job["tx"], job["rep"]
+    result_dir, log_dir, _, _ = get_paths_for_tx(tx)
+    os.makedirs(result_dir, exist_ok=True)
+    os.makedirs(log_dir, exist_ok=True)
+
     attempt = 0
     success = False
-    log_file = os.path.join(LOG_DIR, f"log_TX{TX_POWER}_R{rep}.txt")
-    sca_file = os.path.join(RESULT_DIR, CONFIG_NAME, f"{rep}.sca")
+    log_file = os.path.join(log_dir, f"log_TX{tx}_R{rep}.txt")
+    sca_file = os.path.join(result_dir, CONFIG_NAME, f"{rep}.sca")
     start_time = time.time()
 
     while attempt < MAX_RETRIES and not success:
         with open(log_file, "w") as log:
-            print(f"▶️ TX={TX_POWER}dBm | Repetição={rep} | Tentativa={attempt + 1}")
+            print(f"▶️ TX={tx}dBm | Repetição={rep} | Tentativa={attempt + 1}")
             subprocess.run(
-                build_command(TX_POWER, rep),
+                build_command(tx, rep),
                 cwd=SIMU5G_PROJECT_ROOT,
                 stdout=log,
                 stderr=subprocess.STDOUT,
                 text=True
             )
         time.sleep(1)
-
         success = os.path.exists(sca_file)
         duration = time.time() - start_time
 
-        result = {
-            "tx_power_dBm": TX_POWER,
-            "repetition": rep,
-            "attempt": attempt + 1,
-            "success": success,
-            "sca_expected": sca_file,
-            "log_path": log_file,
-            "duration_sec": round(duration, 2),
-            "timestamp": datetime.now().isoformat()
-        }
-
-        if not success:
-            try:
-                with open(log_file, "r") as f:
-                    tail = f.readlines()[-20:]
-                result["log_tail"] = tail
-            except Exception:
-                result["log_tail"] = ["[Erro ao ler o log]"]
-
         attempt += 1
+
+    result = {
+        "tx_power_dBm": tx,
+        "repetition": rep,
+        "attempts": attempt,
+        "success": success,
+        "sca_expected": sca_file,
+        "log_path": log_file,
+        "duration_sec": round(duration, 2),
+        "timestamp": datetime.now().isoformat()
+    }
+
+    if not success:
+        try:
+            with open(log_file, "r") as f:
+                tail = f.readlines()[-20:]
+            result["log_tail"] = tail
+        except Exception:
+            result["log_tail"] = ["[Erro ao ler o log]"]
 
     return result
 
@@ -142,31 +154,38 @@ def find_sca_files(root: str):
                 sca_files.append(os.path.join(dirpath, f))
     return sorted(sca_files)
 
+# Regex robusto para linhas attr/scalar (suporta aspas e notação científica)
+_S_ATTR   = re.compile(r'^attr\s+(\S+)\s+(.+)$')
+_S_SCALAR = re.compile(r'^scalar\s+(".*?"|\S+)\s+(".*?"|\S+)\s+([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)')
+
+def _unquote(s: str) -> str:
+    s = s.strip()
+    if len(s) >= 2 and s[0] in ('"', "'") and s[-1] == s[0]:
+        return s[1:-1]
+    return s
+
 def parse_sca_file(path: str):
     scalars = []
     attrs = {}
     with open(path, "r", errors="ignore") as fh:
-        for line in fh:
-            line = line.strip()
+        for raw in fh:
+            line = raw.strip()
             if not line:
                 continue
-            if line.startswith("attr "):
-                parts = line.split(None, 2)
-                if len(parts) >= 3:
-                    key = parts[1]
-                    val = parts[2].strip()
-                    if len(val) >= 2 and ((val[0] == '"' and val[-1] == '"') or (val[0] == "'" and val[-1] == "'")):
-                        val = val[1:-1]
-                    attrs[key] = val
-            elif line.startswith("scalar "):
-                parts = line.split()
-                if len(parts) >= 4:
-                    _, module, name, value = parts[0], parts[1], parts[2], parts[3]
-                    try:
-                        v = float(value)
-                    except:
-                        v = math.nan
-                    scalars.append((module, name, v))
+            ma = _S_ATTR.match(line)
+            if ma:
+                key, val = ma.group(1), _unquote(ma.group(2))
+                attrs[key] = val
+                continue
+            ms = _S_SCALAR.match(line)
+            if ms:
+                module = _unquote(ms.group(1))
+                name   = _unquote(ms.group(2))
+                try:
+                    value = float(ms.group(3))
+                except ValueError:
+                    value = math.nan
+                scalars.append((module, name, value))
     df = pd.DataFrame(scalars, columns=["module", "name", "value"])
     return df, attrs
 
@@ -208,10 +227,16 @@ def collect_all_scalars(files):
     return pd.DataFrame(rows)
 
 def summarize_metrics(df: pd.DataFrame):
-    thr = df[df["name"].str.contains("throughput", case=False, na=False)].copy()
-    sinr = df[df["name"].str.contains("sinr", case=False, na=False)].copy()
-    rsrq = df[df["name"].str.contains("rsrq", case=False, na=False)].copy()
-    rsrp = df[df["name"].str.contains("rsrp", case=False, na=False)].copy()
+    # padrões tolerantes
+    pat_thr  = re.compile(r"throughput", re.I)
+    pat_sinr = re.compile(r"(sinr|snir)", re.I)
+    pat_rsrp = re.compile(r"rsrp", re.I)
+    pat_rsrq = re.compile(r"rsrq", re.I)
+
+    thr  = df[df["name"].str.contains(pat_thr,  na=False)].copy()
+    sinr = df[df["name"].str.contains(pat_sinr, na=False)].copy()
+    rsrp = df[df["name"].str.contains(pat_rsrp, na=False)].copy()
+    rsrq = df[df["name"].str.contains(pat_rsrq, na=False)].copy()
 
     def agg_by_power(sub: pd.DataFrame, how: str, label: str):
         if sub.empty:
@@ -220,20 +245,14 @@ def summarize_metrics(df: pd.DataFrame):
         g.columns = ["potencia_dbm", label]
         return g
 
-    thr_sum  = thr.groupby(["potencia_dbm"]).agg(total_throughput=("value", "sum")).reset_index().sort_values("potencia_dbm")
-    thr_mean = agg_by_power(thr, "mean", "throughput_medio")
+    thr_sum   = thr.groupby(["potencia_dbm"]).agg(total_throughput=("value", "sum")).reset_index().sort_values("potencia_dbm")
+    thr_mean  = agg_by_power(thr,  "mean", "throughput_medio")
     sinr_mean = agg_by_power(sinr, "mean", "sinr_medio")
     rsrq_mean = agg_by_power(rsrq, "mean", "rsrq_medio")
     rsrp_mean = agg_by_power(rsrp, "mean", "rsrp_medio")
 
-    return {
-        "thr_sum": thr_sum,
-        "thr_mean": thr_mean,
-        "sinr_mean": sinr_mean,
-        "rsrq_mean": rsrq_mean,
-        "rsrp_mean": rsrp_mean,
-        "raw": df
-    }
+    return {"thr_sum": thr_sum, "thr_mean": thr_mean, "sinr_mean": sinr_mean,
+            "rsrq_mean": rsrq_mean, "rsrp_mean": rsrp_mean, "raw": df}
 
 def save_plot(x, y, xlabel, ylabel, title, outpath):
     plt.figure()
@@ -246,17 +265,20 @@ def save_plot(x, y, xlabel, ylabel, title, outpath):
     plt.savefig(outpath, dpi=200)
     plt.close()
 
-def analyze_results():
-    # Encontra todos os .sca gerados na pasta RESULT_DIR
-    files = find_sca_files(RESULT_DIR)
+def analyze_results(result_roots):
+    # Coleta todos os .sca de todas as potências informadas
+    files = []
+    for root in result_roots:
+        files.extend(find_sca_files(root))
     if not files:
-        print(f"[ANÁLISE] Nenhum .sca encontrado em {RESULT_DIR}")
+        print(f"[ANÁLISE] Nenhum .sca encontrado em: {result_roots}")
         return
 
     df_all = collect_all_scalars(files)
-    # Exporta CSV bruto
+    # Exporta CSV bruto e nomes para diagnóstico
     raw_csv = os.path.join(OUT_DIR, "scalars_raw.csv")
     df_all.to_csv(raw_csv, index=False)
+    (df_all["name"].value_counts()).to_csv(os.path.join(OUT_DIR, "debug_scalar_names.txt"), header=["count"])
 
     metrics = summarize_metrics(df_all)
 
@@ -267,7 +289,7 @@ def analyze_results():
             if isinstance(v, pd.DataFrame) and not v.empty:
                 v.to_excel(writer, sheet_name=k, index=False)
 
-    # Gera gráficos
+    # Gráficos
     if not metrics["thr_sum"].empty:
         save_plot(metrics["thr_sum"]["potencia_dbm"], metrics["thr_sum"]["total_throughput"],
                   "Potência (dBm)", "Throughput total (unid.)", "Potência x Throughput Total",
@@ -313,35 +335,39 @@ def analyze_results():
 # Execução
 # ---------------------------
 if not args.skip_sim:
-    print(f"🚀 Iniciando simulações OMNeT++ para TX={TX_POWER} dBm | repetições={NUM_REPETITIONS} | paralelismo={NUM_PROCESSES}")
-    results = []
-    with Pool(processes=NUM_PROCESSES) as pool:
-        with tqdm(total=NUM_REPETITIONS, desc="Simulações", unit="exec") as pbar:
-            for res in pool.imap_unordered(run_simulation, range(NUM_REPETITIONS)):
-                results.append(res)
-                pbar.update(1)
+    print(f"🚀 Iniciando simulações OMNeT++ | potências={TX_POWERS} dBm | repetições={NUM_REPETITIONS} | paralelismo={NUM_PROCESSES}")
+    for tx in TX_POWERS:
+        result_dir, log_dir, status_path, failed_path = get_paths_for_tx(tx)
+        os.makedirs(result_dir, exist_ok=True)
+        os.makedirs(log_dir, exist_ok=True)
 
-    # Persistência do status
-    os.makedirs(RESULT_DIR, exist_ok=True)
-    with open(STATUS_PATH, "w") as f:
-        json.dump({
-            "tx_power_dBm": TX_POWER,
-            "repetitions": NUM_REPETITIONS,
-            "result_dir": RESULT_DIR,
-            "runs": results
-        }, f, indent=2, ensure_ascii=False)
+        # Jobs desta potência
+        jobs = [{"tx": tx, "rep": rep} for rep in range(NUM_REPETITIONS)]
+        results = []
+        with Pool(processes=NUM_PROCESSES) as pool:
+            with tqdm(total=len(jobs), desc=f"Simulações TX={tx}dBm", unit="exec") as pbar:
+                for res in pool.imap_unordered(run_job, jobs):
+                    results.append(res)
+                    pbar.update(1)
 
-    failed = [r for r in results if not r["success"]]
-    if failed:
-        with open(FAILED_PATH, "w") as f:
-            json.dump(failed, f, indent=2, ensure_ascii=False)
+        # Persistência do status por potência
+        failed = [r for r in results if not r["success"]]
+        with open(status_path, "w") as f:
+            json.dump({
+                "tx_power_dBm": tx,
+                "repetitions": NUM_REPETITIONS,
+                "result_dir": result_dir,
+                "runs": results
+            }, f, indent=2, ensure_ascii=False)
+        if failed:
+            with open(failed_path, "w") as f:
+                json.dump(failed, f, indent=2, ensure_ascii=False)
 
-    print("\n✅ Simulações finalizadas.")
-    print(f"📄 Resumo: {STATUS_PATH}")
-    print(f"⚠️ Falhas: {FAILED_PATH if failed else 'Nenhuma falha registrada.'}")
+        print(f"✅ TX={tx}dBm finalizado. Resumo: {status_path} | Falhas: {failed_path if failed else 'Nenhuma'}")
 else:
     print("⏭  Pulando simulações (modo --skip-sim).")
 
-# Sempre roda a análise ao final
+# Sempre roda a análise ao final (agrega todas as potências solicitadas)
 print("📈 Iniciando análise dos resultados (.sca)...")
-analyze_results()
+roots = [get_paths_for_tx(tx)[0] for tx in TX_POWERS]
+analyze_results(roots)

@@ -1,0 +1,44 @@
+[
+  {
+    "potencia_dbm": 6,
+    "vazao_media_mbps": 17.2226762,
+    "delay_medio_ms": 1853.7538793025685,
+    "cnproc_medio_gops": 285.8918263864668,
+    "cnprop_medio": 0.4286468778252053
+  },
+  {
+    "potencia_dbm": 16,
+    "vazao_media_mbps": 0.0,
+    "delay_medio_ms": 0.0,
+    "cnproc_medio_gops": 0.0,
+    "cnprop_medio": 0.0
+  },
+  {
+    "potencia_dbm": 26,
+    "vazao_media_mbps": 0.0,
+    "delay_medio_ms": 0.0,
+    "cnproc_medio_gops": 0.0,
+    "cnprop_medio": 0.0
+  },
+  {
+    "potencia_dbm": 36,
+    "vazao_media_mbps": 16.022893800000002,
+    "delay_medio_ms": 1736.2003893723415,
+    "cnproc_medio_gops": 255.55262384207077,
+    "cnprop_medio": 0.3869583849332577
+  },
+  {
+    "potencia_dbm": 46,
+    "vazao_media_mbps": 18.5430842,
+    "delay_medio_ms": 1826.1333389787874,
+    "cnproc_medio_gops": 254.61261284149668,
+    "cnprop_medio": 0.3873493826518839
+  },
+  {
+    "potencia_dbm": 56,
+    "vazao_media_mbps": 15.943410199999999,
+    "delay_medio_ms": 1716.6887437195855,
+    "cnproc_medio_gops": 248.8367576476652,
+    "cnprop_medio": 0.37835983643353566
+  }
+]

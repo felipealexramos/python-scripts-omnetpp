@@ -47,7 +47,27 @@ Se seus caminhos diferirem, ajuste as constantes no run_simulations.py:
 
 ---
 
-## Instalação e ambiente Python
+## Instalação e ambiente Pytho🚀 Iniciando simulações OMNeT++ para TX=26 dBm | repetições=5 | paralelismo=4
+Simulações:   0%|                                                                                              | 0/5 [00:00<?, ?exec/s]▶️ TX=26dBm | Repetição=1 | Tentativa=1
+▶️ TX=26dBm | Repetição=2 | Tentativa=1
+▶️ TX=26dBm | Repetição=0 | Tentativa=1
+▶️ TX=26dBm | Repetição=3 | Tentativa=1
+Simulações:  20%|█████████████████                                                                    | 1/5 [03:16<13:07, 196.78s/exec]▶️ TX=26dBm | Repetição=4 | Tentativa=1
+Simulações: 100%|██████████████████████████████████████████████████████████████████████████████████████| 5/5 [05:50<00:00, 70.10s/exec]
+
+✅ Simulações finalizadas.
+📄 Resumo: /home/felipe/Documentos/tcc/omnet/simu5g/results/NR/application02/TrainingToy1_1/Pot26/status.json
+⚠️ Falhas: Nenhuma falha registrada.
+📈 Iniciando análise dos resultados (.sca)...
+Traceback (most recent call last):
+  File "/home/felipe/Documentos/tcc/omnet/Run_Simulations_Simu5G/run_simulations.py", line 347, in <module>
+    analyze_results()
+  File "/home/felipe/Documentos/tcc/omnet/Run_Simulations_Simu5G/run_simulations.py", line 265, in analyze_results
+    with pd.ExcelWriter(xlsx_path, engine="xlsxwriter") as writer:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/felipe/Documentos/tcc/omnet/.venv/lib/python3.12/site-packages/pandas/io/excel/_xlsxwriter.py", line 197, in __init__
+    from xlsxwriter import Workbook
+ModuleNotFoundError: No module named 'xlsxwriter'n
 
 Recomendado usar venv no diretório do projeto:
 

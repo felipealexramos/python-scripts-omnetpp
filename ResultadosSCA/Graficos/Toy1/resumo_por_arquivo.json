@@ -1,0 +1,50 @@
+[
+  {
+    "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy1/16dBm-0.sca",
+    "p_dbm": 16,
+    "sum_rate_mbps": 11.8096392,
+    "mean_delay_ms": 1782.5628336140014,
+    "mean_cnproc_gops": 371.0272347284756,
+    "mean_cnprop": 0.6183787245474622
+  },
+  {
+    "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy1/26dBm-0.sca",
+    "p_dbm": 26,
+    "sum_rate_mbps": 13.3442734,
+    "mean_delay_ms": 1697.2846175620966,
+    "mean_cnproc_gops": 363.59342145609776,
+    "mean_cnprop": 0.6059890357601712
+  },
+  {
+    "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy1/36dBm-0.sca",
+    "p_dbm": 36,
+    "sum_rate_mbps": 10.9041038,
+    "mean_delay_ms": 1773.973471988185,
+    "mean_cnproc_gops": 358.83237588701667,
+    "mean_cnprop": 0.5980539598117011
+  },
+  {
+    "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy1/46dBm-0.sca",
+    "p_dbm": 46,
+    "sum_rate_mbps": 13.5193984,
+    "mean_delay_ms": 1823.1394309399277,
+    "mean_cnproc_gops": 361.1024139037122,
+    "mean_cnprop": 0.6018373565061901
+  },
+  {
+    "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy1/56dBm-0.sca",
+    "p_dbm": 56,
+    "sum_rate_mbps": 9.3509468,
+    "mean_delay_ms": 1705.5255694405282,
+    "mean_cnproc_gops": 357.30935027699223,
+    "mean_cnprop": 0.59551558379499
+  },
+  {
+    "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy1/6dBm-0.sca",
+    "p_dbm": 6,
+    "sum_rate_mbps": 10.3703786,
+    "mean_delay_ms": 1818.7209259566184,
+    "mean_cnproc_gops": 388.4576103792633,
+    "mean_cnprop": 0.6474293506321089
+  }
+]

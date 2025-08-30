@@ -1,0 +1,6 @@
+{
+  "sim_time_s": 20,
+  "p_idle_w": 0.0,
+  "k_cnproc_w_per_gops": 1.0,
+  "k_thp_w_per_mbps": 0.0
+}

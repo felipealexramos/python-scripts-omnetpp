@@ -1,0 +1,44 @@
+[
+  {
+    "potencia_dbm": 6,
+    "vazao_media_mbps": 14.620577,
+    "delay_medio_ms": 1704.342652319054,
+    "cnproc_medio_gops": 185.8952862282191,
+    "cnprop_medio": 0.27652974761365734
+  },
+  {
+    "potencia_dbm": 16,
+    "vazao_media_mbps": 19.1130294,
+    "delay_medio_ms": 1893.4155691583858,
+    "cnproc_medio_gops": 166.20021116471142,
+    "cnprop_medio": 0.24833315544313342
+  },
+  {
+    "potencia_dbm": 26,
+    "vazao_media_mbps": 15.586018,
+    "delay_medio_ms": 1766.911489222158,
+    "cnproc_medio_gops": 163.07005819851742,
+    "cnprop_medio": 0.2438673467550814
+  },
+  {
+    "potencia_dbm": 36,
+    "vazao_media_mbps": 16.5615914,
+    "delay_medio_ms": 1813.87008266458,
+    "cnproc_medio_gops": 161.69136684961433,
+    "cnprop_medio": 0.24199358412018668
+  },
+  {
+    "potencia_dbm": 46,
+    "vazao_media_mbps": 17.2741254,
+    "delay_medio_ms": 1806.6553492785115,
+    "cnproc_medio_gops": 159.49641932888207,
+    "cnprop_medio": 0.23903534889375933
+  },
+  {
+    "potencia_dbm": 56,
+    "vazao_media_mbps": 19.824738,
+    "delay_medio_ms": 1753.6728045454017,
+    "cnproc_medio_gops": 161.27722304340207,
+    "cnprop_medio": 0.24123780033528233
+  }
+]
