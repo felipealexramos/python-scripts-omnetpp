@@ -3,42 +3,60 @@
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy2/16dBm-0.sca",
     "p_dbm": 16,
     "sum_rate_mbps": 19.1130294,
+    "ue_active_count": 35,
     "mean_delay_ms": 1893.4155691583858,
-    "custo_computacional_gops": 166.20021116471142
+    "custo_computacional_gops_media_gnb": 166.20021116471142,
+    "custo_computacional_gops_soma": 1994.402533976537,
+    "gnb_count": 12
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy2/26dBm-0.sca",
     "p_dbm": 26,
     "sum_rate_mbps": 15.586018,
+    "ue_active_count": 36,
     "mean_delay_ms": 1766.911489222158,
-    "custo_computacional_gops": 163.07005819851742
+    "custo_computacional_gops_media_gnb": 163.07005819851742,
+    "custo_computacional_gops_soma": 1956.840698382209,
+    "gnb_count": 12
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy2/36dBm-0.sca",
     "p_dbm": 36,
     "sum_rate_mbps": 16.5615914,
+    "ue_active_count": 36,
     "mean_delay_ms": 1813.87008266458,
-    "custo_computacional_gops": 161.69136684961433
+    "custo_computacional_gops_media_gnb": 161.69136684961433,
+    "custo_computacional_gops_soma": 1940.296402195372,
+    "gnb_count": 12
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy2/46dBm-0.sca",
     "p_dbm": 46,
     "sum_rate_mbps": 17.2741254,
+    "ue_active_count": 37,
     "mean_delay_ms": 1806.6553492785115,
-    "custo_computacional_gops": 159.49641932888207
+    "custo_computacional_gops_media_gnb": 159.49641932888207,
+    "custo_computacional_gops_soma": 1913.957031946585,
+    "gnb_count": 12
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy2/56dBm-0.sca",
     "p_dbm": 56,
     "sum_rate_mbps": 19.824738,
+    "ue_active_count": 36,
     "mean_delay_ms": 1753.6728045454017,
-    "custo_computacional_gops": 161.27722304340207
+    "custo_computacional_gops_media_gnb": 161.27722304340207,
+    "custo_computacional_gops_soma": 1935.326676520825,
+    "gnb_count": 12
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy2/6dBm-0.sca",
     "p_dbm": 6,
     "sum_rate_mbps": 14.620577,
+    "ue_active_count": 33,
     "mean_delay_ms": 1704.342652319054,
-    "custo_computacional_gops": 185.8952862282191
+    "custo_computacional_gops_media_gnb": 185.8952862282191,
+    "custo_computacional_gops_soma": 2230.7434347386293,
+    "gnb_count": 12
   }
 ]

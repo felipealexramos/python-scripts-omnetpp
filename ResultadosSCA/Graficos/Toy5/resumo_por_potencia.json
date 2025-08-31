@@ -3,36 +3,96 @@
     "potencia_dbm": 6,
     "vazao_media_mbps": 17.2226762,
     "delay_medio_ms": 1853.7538793025685,
-    "custo_computacional_gops": 285.8918263864668
+    "custo_computacional_gops_media_gnb": 285.8918263864668,
+    "custo_computacional_gops_soma": 2573.026437478201,
+    "ues_ativos_medios": 33.0,
+    "gnb_count": 9,
+    "P_tot_W": 2311.023283520787,
+    "E_tot_J": 46220.46567041574,
+    "E_tot_kWh": 0.01283901824178215,
+    "eff_mbps_per_joule": 0.0074524027182286436,
+    "P_tx_W": 0.003981071705534973,
+    "sim_time_s": 20.0,
+    "global_eff_index": 1.9992990493512463e-06
   },
   {
     "potencia_dbm": 16,
     "vazao_media_mbps": 15.2375208,
     "delay_medio_ms": 1830.7178833010155,
-    "custo_computacional_gops": 260.6026575959222
+    "custo_computacional_gops_media_gnb": 260.6026575959222,
+    "custo_computacional_gops_soma": 2345.4239183633,
+    "ues_ativos_medios": 35.0,
+    "gnb_count": 9,
+    "P_tot_W": 2152.344515714776,
+    "E_tot_J": 43046.890314295524,
+    "E_tot_kWh": 0.011957469531748756,
+    "eff_mbps_per_joule": 0.007079498978322131,
+    "P_tx_W": 0.039810717055349734,
+    "sim_time_s": 20.0,
+    "global_eff_index": 1.9230266198170058e-06
   },
   {
     "potencia_dbm": 26,
     "vazao_media_mbps": 15.4296884,
     "delay_medio_ms": 1846.5248696263016,
-    "custo_computacional_gops": 256.34421530636365
+    "custo_computacional_gops_media_gnb": 256.34421530636365,
+    "custo_computacional_gops_soma": 2307.097937757273,
+    "ues_ativos_medios": 35.0,
+    "gnb_count": 9,
+    "P_tot_W": 2125.946285034755,
+    "E_tot_J": 42518.9257006951,
+    "E_tot_kWh": 0.011810812694637528,
+    "eff_mbps_per_joule": 0.007257797860940666,
+    "P_tx_W": 0.3981071705534972,
+    "sim_time_s": 20.0,
+    "global_eff_index": 1.954672942895072e-06
   },
   {
     "potencia_dbm": 36,
     "vazao_media_mbps": 16.022893800000002,
     "delay_medio_ms": 1736.2003893723415,
-    "custo_computacional_gops": 255.55262384207077
+    "custo_computacional_gops_media_gnb": 255.55262384207077,
+    "custo_computacional_gops_soma": 2299.973614578637,
+    "ues_ativos_medios": 37.0,
+    "gnb_count": 9,
+    "P_tot_W": 2125.8588162516876,
+    "E_tot_J": 42517.17632503375,
+    "E_tot_kWh": 0.01181032675695382,
+    "eff_mbps_per_joule": 0.0075371391917039695,
+    "P_tx_W": 3.9810717055349722,
+    "sim_time_s": 20.0,
+    "global_eff_index": 2.1581541378573218e-06
   },
   {
     "potencia_dbm": 46,
     "vazao_media_mbps": 18.5430842,
     "delay_medio_ms": 1826.1333389787874,
-    "custo_computacional_gops": 254.61261284149668
+    "custo_computacional_gops_media_gnb": 254.61261284149668,
+    "custo_computacional_gops_soma": 2291.51351557347,
+    "ues_ativos_medios": 37.0,
+    "gnb_count": 9,
+    "P_tot_W": 2162.9323213678485,
+    "E_tot_J": 43258.64642735697,
+    "E_tot_kWh": 0.012016290674265826,
+    "eff_mbps_per_joule": 0.008573122707914072,
+    "P_tx_W": 39.810717055349734,
+    "sim_time_s": 20.0,
+    "global_eff_index": 2.334558859620248e-06
   },
   {
     "potencia_dbm": 56,
     "vazao_media_mbps": 15.943410199999999,
     "delay_medio_ms": 1716.6887437195855,
-    "custo_computacional_gops": 248.8367576476652
+    "custo_computacional_gops_media_gnb": 248.8367576476652,
+    "custo_computacional_gops_soma": 2239.530818828987,
+    "ues_ativos_medios": 37.0,
+    "gnb_count": 9,
+    "P_tot_W": 2556.500177844487,
+    "E_tot_J": 51130.003556889744,
+    "E_tot_kWh": 0.014202778765802707,
+    "eff_mbps_per_joule": 0.006236420532324267,
+    "P_tx_W": 398.1071705534973,
+    "sim_time_s": 20.0,
+    "global_eff_index": 1.805890191561086e-06
   }
 ]

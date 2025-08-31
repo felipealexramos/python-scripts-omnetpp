@@ -1,6 +1,19 @@
 {
-  "sim_time_s": 20,
-  "p_idle_w": 0.0,
-  "k_cnproc_w_per_gops": 1.0,
-  "k_thp_w_per_mbps": 0.0
+  "general": {
+    "idle_power_w": 500,           
+    "alpha": 0.7,                   
+    "beta": 0.3,                    
+    "gamma": 1.2,                   
+    "tx_powers_dbm": [6,16,26,36,46,56]  
+  },
+  "o_ran_split": {
+    "o_ru_percent": 0.65,           
+    "o_du_percent": 0.25,          
+    "o_cu_percent": 0.10            
+  },
+  "limits": {
+    "min_power_w": 100,
+    "max_power_w": 5000
+  },
+  "notes": "Exemplo baseado em valores típicos (ETSI, NGMN, Huawei, 3GPP TR 38.913). Ajuste idle_power_w, alpha, beta e gamma de acordo com as curvas experimentais do estudo."
 }
