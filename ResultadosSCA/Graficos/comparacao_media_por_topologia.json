@@ -25,9 +25,9 @@
   },
   {
     "topologia": "Toy5",
-    "vazao_media_mbps_todas_potencias": 11.2886774,
-    "delay_medio_ms_todas_potencias": 1188.7960585622138,
-    "cnproc_medio_gops_todas_potencias": 174.14897011961656
+    "vazao_media_mbps_todas_potencias": 16.399878933333333,
+    "delay_medio_ms_todas_potencias": 1801.6698507167666,
+    "cnproc_medio_gops_todas_potencias": 260.30678226999754
   },
   {
     "topologia": "Toy6",

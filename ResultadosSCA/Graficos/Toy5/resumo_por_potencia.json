@@ -8,17 +8,17 @@
   },
   {
     "potencia_dbm": 16,
-    "vazao_media_mbps": 0.0,
-    "delay_medio_ms": 0.0,
-    "cnproc_medio_gops": 0.0,
-    "cnprop_medio": 0.0
+    "vazao_media_mbps": 15.2375208,
+    "delay_medio_ms": 1830.7178833010155,
+    "cnproc_medio_gops": 260.6026575959222,
+    "cnprop_medio": 0.39477877348666324
   },
   {
     "potencia_dbm": 26,
-    "vazao_media_mbps": 0.0,
-    "delay_medio_ms": 0.0,
-    "cnproc_medio_gops": 0.0,
-    "cnprop_medio": 0.0
+    "vazao_media_mbps": 15.4296884,
+    "delay_medio_ms": 1846.5248696263016,
+    "cnproc_medio_gops": 256.34421530636365,
+    "cnprop_medio": 0.3890252885710632
   },
   {
     "potencia_dbm": 36,
