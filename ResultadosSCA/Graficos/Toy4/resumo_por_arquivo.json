@@ -4,47 +4,41 @@
     "p_dbm": 16,
     "sum_rate_mbps": 13.7439524,
     "mean_delay_ms": 1976.0423640462288,
-    "mean_cnproc_gops": 148.96854000461002,
-    "mean_cnprop": 0.222919055389805
+    "custo_computacional_gops": 148.96854000461002
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy4/26dBm-0.sca",
     "p_dbm": 26,
     "sum_rate_mbps": 12.435157199999999,
     "mean_delay_ms": 1866.302276539683,
-    "mean_cnproc_gops": 145.996840408589,
-    "mean_cnprop": 0.2186746781093844
+    "custo_computacional_gops": 145.996840408589
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy4/36dBm-0.sca",
     "p_dbm": 36,
     "sum_rate_mbps": 14.1005524,
     "mean_delay_ms": 1847.2691920612456,
-    "mean_cnproc_gops": 147.1118901462284,
-    "mean_cnprop": 0.219768698089365
+    "custo_computacional_gops": 147.1118901462284
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy4/46dBm-0.sca",
     "p_dbm": 46,
     "sum_rate_mbps": 14.726255199999999,
     "mean_delay_ms": 1927.1999797580804,
-    "mean_cnproc_gops": 148.3477626817836,
-    "mean_cnprop": 0.22156272650814102
+    "custo_computacional_gops": 148.3477626817836
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy4/56dBm-0.sca",
     "p_dbm": 56,
     "sum_rate_mbps": 14.8527086,
     "mean_delay_ms": 1759.4387567704257,
-    "mean_cnproc_gops": 145.206739183722,
-    "mean_cnprop": 0.21686280442995504
+    "custo_computacional_gops": 145.206739183722
   },
   {
     "file": "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03/Toy4/6dBm-0.sca",
     "p_dbm": 6,
     "sum_rate_mbps": 12.376005600000001,
     "mean_delay_ms": 2040.4872693547343,
-    "mean_cnproc_gops": 166.41237731720452,
-    "mean_cnprop": 0.249756896882265
+    "custo_computacional_gops": 166.41237731720452
   }
 ]
