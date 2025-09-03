@@ -323,7 +323,6 @@ def process_topology(topology_dir: Path, out_dir: Path, energy_cfg: dict | None)
 # Comparações globais
 # ---------------------------
 def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict | None):
-    import numpy as np
 
     power_axis = sorted({p for t in topologies_data for p in (t["powers"] if t else [])})
     labels_solucoes = [t["name"] for t in topologies_data if t]
@@ -364,14 +363,13 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
     plot_xy_multi(power_axis, proc_by_sol, "Custo computacional (GOPS)",
                   "Custo computacional × Potência", out_root/"comparacao_custo_linhas.png")
 
-    # NOVOS comparativos globais (se energy_cfg)
+    # NOVOS comparativos globais de Energia (requer --energy-cfg)
     if energy_cfg:
-        # Reabrimos os JSONs gerados por solução para capturar Energia/IEG por potência
-        energia_vals = {sol: [] for sol in labels_solucoes}
-        eficien_vals = {sol: [] for sol in labels_solucoes}
-        ieg_vals     = {sol: [] for sol in labels_solucoes}
+        # Lê os JSONs por solução já gerados para pegar Energia (kWh) por potência
+        energia_by_sol = {sol: {} for sol in labels_solucoes}
+        eficien_by_sol = {sol: {} for sol in labels_solucoes}  # mantido para futuras análises
 
-        scatter_E, scatter_D, scatter_S, scatter_C = [], [], [], []  # energia, delay, size(vazão), cor(solução)
+        scatter_E, scatter_D, scatter_S, scatter_C = [], [], [], []
         color_map = {sol: i for i, sol in enumerate(labels_solucoes)}
 
         for sol in labels_solucoes:
@@ -381,43 +379,59 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
                 continue
             rows = json.loads(rjson.read_text())
             byp = {r["potencia_dbm"]: r for r in rows}
+
             for p in power_axis:
-                thp = byp.get(p, {}).get("vazao_media_mbps", 0.0)
-                dly = byp.get(p, {}).get("delay_medio_ms", 0.0)
-                if "E_tot_kWh" in byp.get(p, {}):
+                # Energia (kWh)
+                if p in byp and "E_tot_kWh" in byp[p]:
                     E_kWh = byp[p]["E_tot_kWh"]
-                    E_J   = byp[p]["E_tot_J"]
-                    eff   = byp[p]["eff_mbps_per_joule"]
+                    eff   = byp[p].get("eff_mbps_per_joule", 0.0)
                 else:
-                    # recalcula se necessário
+                    # fallback (recalcula se necessário)
+                    thp = byp.get(p, {}).get("vazao_media_mbps", 0.0)
+                    dly = byp.get(p, {}).get("delay_medio_ms", 0.0)
                     proc_sum = byp.get(p, {}).get("custo_computacional_gops_soma", 0.0)
                     ues = byp.get(p, {}).get("ues_ativos_medios", 0.0)
                     em = compute_power_energy_eff(p, proc_sum, ues, thp, energy_cfg)
-                    E_kWh = em["E_tot_kWh"]; E_J = em["E_tot_J"]; eff = em["eff_mbps_per_joule"]
+                    E_kWh = em["E_tot_kWh"]
+                    eff   = em["eff_mbps_per_joule"]
+                    # atualiza por consistência
+                    byp.setdefault(p, {})["E_tot_kWh"] = E_kWh
+                    byp[p]["eff_mbps_per_joule"] = eff
 
-                energia_vals[sol].append(E_kWh)
-                eficien_vals[sol].append(eff)
+                energia_by_sol[sol][p] = E_kWh
+                eficien_by_sol[sol][p] = eff
 
-                ieg = compute_global_eff_index(thp, E_J, dly, energy_cfg)
-                ieg_vals[sol].append(ieg)
-
-                # dados do scatter (um ponto por solução×potência)
+                # Dados do scatter opcional (Energia × Delay com tamanho = Vazão)
+                thp = byp.get(p, {}).get("vazao_media_mbps", 0.0)
+                dly = byp.get(p, {}).get("delay_medio_ms", 0.0)
                 scatter_E.append(E_kWh)
                 scatter_D.append(dly)
-                # escala de tamanho simples: s = a*thp + b, garantindo tamanho mínimo
-                s = max(thp, 0.1) * 8.0
-                scatter_S.append(s)
+                scatter_S.append(max(thp, 0.1) * 8.0)
                 scatter_C.append(color_map[sol])
 
-        # 1) Scatter: Energia (kWh) x Delay (ms) com tamanho = Vazão (Mbps)
+        # (1) BARRAS: Energia × Solução (uma barra por potência)
+        plot_grouped_bars_by_power(
+            labels_solucoes, power_axis,
+            to_values_by_power(energia_by_sol),
+            "Energia total (kWh)",
+            "Energia × Solução (uma barra por potência)",
+            Path(out_root)/"comparacao_energia.png"
+        )
+
+        # (2) LINHAS: Energia × Potência (uma curva por solução)
+        plot_xy_multi(
+            power_axis, energia_by_sol,
+            "Energia total (kWh)", "Energia × Potência",
+            Path(out_root)/"comparacao_energia_linhas.png"
+        )
+
+        # (3) Scatter já existente (Energia × Delay – tamanho = Vazão)
         plt.figure(figsize=(10,6))
-        sc = plt.scatter(scatter_E, scatter_D, s=scatter_S, c=scatter_C, cmap="tab10", alpha=0.8, edgecolors="k", linewidths=0.3)
-        # criar legenda por solução
-        handles = []
+        sc = plt.scatter(scatter_E, scatter_D, s=scatter_S, c=scatter_C,
+                         cmap="tab10", alpha=0.8, edgecolors="k", linewidths=0.3)
         import matplotlib.patches as mpatches
-        for sol, idx in color_map.items():
-            patch = mpatches.Patch(color=plt.cm.tab10(idx), label=sol)
-            handles.append(patch)
+        handles = [mpatches.Patch(color=plt.cm.tab10(idx), label=sol)
+                   for sol, idx in color_map.items()]
         plt.legend(handles=handles, loc="lower right", title="Soluções")
         plt.xlabel("Energia total (kWh)")
         plt.ylabel("Delay médio (ms)")
@@ -425,30 +439,6 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
         plt.grid(True, linestyle=":")
         plt.tight_layout()
         plt.savefig(Path(out_root)/"comparacao_scatter_energia_delay_bolhas.png", dpi=300)
-        plt.close()
-
-        # 2) Barras: IEG por Solução com uma barra por potência
-        def dict_to_vbp(d):
-            return {p: [d[sol][i] if i < len(d[sol]) else 0.0 for sol in labels_solucoes]
-                    for i, p in enumerate(power_axis)}
-        plot_grouped_bars_by_power(
-            labels_solucoes, power_axis, dict_to_vbp(ieg_vals),
-            "Índice de Eficiência Global (a.u.)",
-            "IEG × Solução (uma barra por potência)",
-            Path(out_root)/"comparacao_indice_eficiencia_global_barras_por_potencia.png"
-        )
-
-        # 3) Barras: IEG médio por Solução (média ao longo das potências)
-        ieg_media = [safe_mean(ieg_vals[sol]) for sol in labels_solucoes]
-        x = np.arange(len(labels_solucoes))
-        plt.figure(figsize=(max(10, 1.2*len(labels_solucoes)), 5))
-        plt.bar(x, ieg_media)
-        plt.xticks(x, labels_solucoes)
-        plt.ylabel("Índice de Eficiência Global (a.u.)")
-        plt.title("IEG médio por Solução (média nas potências)")
-        plt.grid(axis="y", linestyle=":", alpha=0.6)
-        plt.tight_layout()
-        plt.savefig(Path(out_root)/"comparacao_indice_eficiencia_global_barras_media.png", dpi=300)
         plt.close()
 
 # ---------------------------
