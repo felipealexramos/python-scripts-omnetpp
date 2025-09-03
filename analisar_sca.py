@@ -14,6 +14,15 @@ DEFAULT_OUT  = "/home/felipe/Documentos/tcc/omnet/ResultadosSCA/Graficos"
 DEFAULT_TOYS = ["Toy1","Toy2","Toy3","Toy4","Toy5","Toy6"]
 
 # ---------------------------
+# Seletor de métricas/gráficos
+# ---------------------------
+METRIC_CHOICES = ["throughput", "delay", "proc", "energy", "efficiency", "ieg"]
+CHART_CHOICES  = ["per-solution", "comparisons", "scatter"]
+
+def _enabled(target: str, selected: list[str]) -> bool:
+    return ("all" in selected) or (target in selected)
+
+# ---------------------------
 # Regex
 # ---------------------------
 NUM = r"(\d+(?:\.\d+)?)"
@@ -168,7 +177,7 @@ def compute_global_eff_index(thp_mbps, energy_j, delay_ms, cfg: dict):
     return (thp / ene) * (1.0 / (1.0 + dly / D0))
 
 # ---------------------------
-# Gráficos auxiliares (legenda inferior direita)
+# Gráficos auxiliares
 # ---------------------------
 def plot_xy_multi(power_axis, series_by_solution, ylabel, title, out_png):
     plt.figure(figsize=(9.5,5))
@@ -209,7 +218,8 @@ def plot_grouped_bars_by_power(labels_solucoes, power_axis, values_by_power, yla
 # ---------------------------
 # Processamento por solução
 # ---------------------------
-def process_topology(topology_dir: Path, out_dir: Path, energy_cfg: dict | None):
+def process_topology(topology_dir: Path, out_dir: Path, energy_cfg: dict | None,
+                     metrics: list[str], charts: list[str]):
     ensure_dir(out_dir)
     sca_files = sorted(topology_dir.glob("*.sca"))
     if not sca_files:
@@ -255,7 +265,7 @@ def process_topology(topology_dir: Path, out_dir: Path, energy_cfg: dict | None)
             "ues_ativos_medios": ues_act_series[i],
             "gnb_count": gnb_count_ser[i]
         }
-        if energy_cfg:
+        if energy_cfg and any(_enabled(m, metrics) for m in ["energy","efficiency","ieg"]):
             em = compute_power_energy_eff(
                 p,
                 proc_sum_series[i],
@@ -276,43 +286,43 @@ def process_topology(topology_dir: Path, out_dir: Path, energy_cfg: dict | None)
     # Nome normalizado
     name = toy_to_solucao(topology_dir.name)
 
-    # Gráficos EXISTENTES (inalterados)
-    plot_xy_multi(powers, {name: dict(zip(powers, thp_series))},
-                  "Vazão média (Mbps)", f"{name}: Potência × Vazão",
-                  out_dir/"potencia_vs_vazao.png")
-    plot_xy_multi(powers, {name: dict(zip(powers, delay_series))},
-                  "Delay médio (ms)", f"{name}: Potência × Delay",
-                  out_dir/"potencia_vs_delay.png")
-    plot_xy_multi(powers, {name: dict(zip(powers, proc_mean_series))},
-                  "Custo computacional (GOPS)", f"{name}: Potência × Custo computacional",
-                  out_dir/"potencia_vs_custo.png")
+    # --------- GRÁFICOS por solução (linhas) ----------
+    if _enabled("per-solution", charts):
+        if _enabled("throughput", metrics):
+            plot_xy_multi(powers, {name: dict(zip(powers, thp_series))},
+                          "Vazão média (Mbps)", f"{name}: Potência × Vazão",
+                          out_dir/"potencia_vs_vazao.png")
+        if _enabled("delay", metrics):
+            plot_xy_multi(powers, {name: dict(zip(powers, delay_series))},
+                          "Delay médio (ms)", f"{name}: Potência × Delay",
+                          out_dir/"potencia_vs_delay.png")
+        if _enabled("proc", metrics):
+            plot_xy_multi(powers, {name: dict(zip(powers, proc_mean_series))},
+                          "Custo computacional (GOPS)", f"{name}: Potência × Custo computacional",
+                          out_dir/"potencia_vs_custo.png")
 
-    # NOVOS gráficos por Solução (se energy_cfg)
-    if energy_cfg:
-        energia_kwh = []
-        eficiencia  = []
-        ieg_series  = []
+    # --------- ENERGIA / EFICIÊNCIA por solução ----------
+    if energy_cfg and any(_enabled(m, metrics) for m in ["energy","efficiency","ieg"]):
+        energia_kwh, eficiencia, ieg_series = [], [], []
         for i, p in enumerate(powers):
             em = compute_power_energy_eff(p, proc_sum_series[i], ues_act_series[i], thp_series[i], energy_cfg)
             energia_kwh.append(em["E_tot_kWh"])
             eficiencia.append(em["eff_mbps_per_joule"])
             ieg_series.append(compute_global_eff_index(thp_series[i], em["E_tot_J"], delay_series[i], energy_cfg))
 
-        plot_xy_multi(
-            powers, {name: dict(zip(powers, energia_kwh))},
-            "Energia total (kWh)", f"{name}: Potência × Energia (kWh)",
-            out_dir/"potencia_vs_energia_kwh.png"
-        )
-        plot_xy_multi(
-            powers, {name: dict(zip(powers, eficiencia))},
-            "Eficiência (Mbps/J)", f"{name}: Potência × Eficiência energética",
-            out_dir/"potencia_vs_eficiencia.png"
-        )
-        plot_xy_multi(
-            powers, {name: dict(zip(powers, ieg_series))},
-            "Índice de Eficiência Global (a.u.)", f"{name}: Potência × IEG",
-            out_dir/"potencia_vs_indice_eficiencia_global.png"
-        )
+        if _enabled("per-solution", charts):
+            if _enabled("energy", metrics):
+                plot_xy_multi(powers, {name: dict(zip(powers, energia_kwh))},
+                              "Energia total (kWh)", f"{name}: Potência × Energia (kWh)",
+                              out_dir/"potencia_vs_energia_kwh.png")
+            if _enabled("efficiency", metrics):
+                plot_xy_multi(powers, {name: dict(zip(powers, eficiencia))},
+                              "Eficiência (Mbps/J)", f"{name}: Potência × Eficiência energética",
+                              out_dir/"potencia_vs_eficiencia.png")
+            if _enabled("ieg", metrics):
+                plot_xy_multi(powers, {name: dict(zip(powers, ieg_series))},
+                              "Índice de Eficiência Global (a.u.)", f"{name}: Potência × IEG",
+                              out_dir/"potencia_vs_indice_eficiencia_global.png")
 
     return {
         "name": name, "powers": powers,
@@ -322,7 +332,8 @@ def process_topology(topology_dir: Path, out_dir: Path, energy_cfg: dict | None)
 # ---------------------------
 # Comparações globais
 # ---------------------------
-def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict | None):
+def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict | None,
+                              metrics: list[str], charts: list[str]):
 
     power_axis = sorted({p for t in topologies_data for p in (t["powers"] if t else [])})
     labels_solucoes = [t["name"] for t in topologies_data if t]
@@ -340,34 +351,42 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
             result[p] = vals
         return result
 
-    # EXISTENTES (inalterados)
-    plot_grouped_bars_by_power(labels_solucoes, power_axis,
-        to_values_by_power(thp_by_sol),
-        "Vazão média (Mbps)", "Vazão × Solução",
-        out_root/"comparacao_vazao.png")
+    # Barras comparativas
+    if _enabled("comparisons", charts):
+        if _enabled("throughput", metrics):
+            plot_grouped_bars_by_power(labels_solucoes, power_axis,
+                to_values_by_power(thp_by_sol),
+                "Vazão média (Mbps)", "Vazão × Solução",
+                out_root/"comparacao_vazao.png")
 
-    plot_grouped_bars_by_power(labels_solucoes, power_axis,
-        to_values_by_power(dly_by_sol),
-        "Delay médio (ms)", "Delay × Solução",
-        out_root/"comparacao_delay.png")
+        if _enabled("delay", metrics):
+            plot_grouped_bars_by_power(labels_solucoes, power_axis,
+                to_values_by_power(dly_by_sol),
+                "Delay médio (ms)", "Delay × Solução",
+                out_root/"comparacao_delay.png")
 
-    plot_grouped_bars_by_power(labels_solucoes, power_axis,
-        to_values_by_power(proc_by_sol),
-        "Custo computacional (GOPS)", "Custo computacional × Solução",
-        out_root/"comparacao_custo.png")
+        if _enabled("proc", metrics):
+            plot_grouped_bars_by_power(labels_solucoes, power_axis,
+                to_values_by_power(proc_by_sol),
+                "Custo computacional (GOPS)", "Custo computacional × Solução",
+                out_root/"comparacao_custo.png")
 
-    plot_xy_multi(power_axis, thp_by_sol, "Vazão média (Mbps)",
-                  "Vazão × Potência", out_root/"comparacao_vazao_linhas.png")
-    plot_xy_multi(power_axis, dly_by_sol, "Delay médio (ms)",
-                  "Delay × Potência", out_root/"comparacao_delay_linhas.png")
-    plot_xy_multi(power_axis, proc_by_sol, "Custo computacional (GOPS)",
-                  "Custo computacional × Potência", out_root/"comparacao_custo_linhas.png")
+    # Linhas comparativas (por solução)
+    if _enabled("per-solution", charts):
+        if _enabled("throughput", metrics):
+            plot_xy_multi(power_axis, thp_by_sol, "Vazão média (Mbps)",
+                          "Vazão × Potência", out_root/"comparacao_vazao_linhas.png")
+        if _enabled("delay", metrics):
+            plot_xy_multi(power_axis, dly_by_sol, "Delay médio (ms)",
+                          "Delay × Potência", out_root/"comparacao_delay_linhas.png")
+        if _enabled("proc", metrics):
+            plot_xy_multi(power_axis, proc_by_sol, "Custo computacional (GOPS)",
+                          "Custo computacional × Potência", out_root/"comparacao_custo_linhas.png")
 
-    # NOVOS comparativos globais de Energia (requer --energy-cfg)
-    if energy_cfg:
-        # Lê os JSONs por solução já gerados para pegar Energia (kWh) por potência
+    # Energia/Eficiência globais (se houver cfg)
+    if energy_cfg and any(_enabled(m, metrics) for m in ["energy","efficiency","ieg"]):
         energia_by_sol = {sol: {} for sol in labels_solucoes}
-        eficien_by_sol = {sol: {} for sol in labels_solucoes}  # mantido para futuras análises
+        eficien_by_sol = {sol: {} for sol in labels_solucoes}
 
         scatter_E, scatter_D, scatter_S, scatter_C = [], [], [], []
         color_map = {sol: i for i, sol in enumerate(labels_solucoes)}
@@ -381,12 +400,10 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
             byp = {r["potencia_dbm"]: r for r in rows}
 
             for p in power_axis:
-                # Energia (kWh)
                 if p in byp and "E_tot_kWh" in byp[p]:
                     E_kWh = byp[p]["E_tot_kWh"]
                     eff   = byp[p].get("eff_mbps_per_joule", 0.0)
                 else:
-                    # fallback (recalcula se necessário)
                     thp = byp.get(p, {}).get("vazao_media_mbps", 0.0)
                     dly = byp.get(p, {}).get("delay_medio_ms", 0.0)
                     proc_sum = byp.get(p, {}).get("custo_computacional_gops_soma", 0.0)
@@ -394,14 +411,12 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
                     em = compute_power_energy_eff(p, proc_sum, ues, thp, energy_cfg)
                     E_kWh = em["E_tot_kWh"]
                     eff   = em["eff_mbps_per_joule"]
-                    # atualiza por consistência
                     byp.setdefault(p, {})["E_tot_kWh"] = E_kWh
                     byp[p]["eff_mbps_per_joule"] = eff
 
                 energia_by_sol[sol][p] = E_kWh
                 eficien_by_sol[sol][p] = eff
 
-                # Dados do scatter opcional (Energia × Delay com tamanho = Vazão)
                 thp = byp.get(p, {}).get("vazao_media_mbps", 0.0)
                 dly = byp.get(p, {}).get("delay_medio_ms", 0.0)
                 scatter_E.append(E_kWh)
@@ -409,37 +424,37 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
                 scatter_S.append(max(thp, 0.1) * 8.0)
                 scatter_C.append(color_map[sol])
 
-        # (1) BARRAS: Energia × Solução (uma barra por potência)
-        plot_grouped_bars_by_power(
-            labels_solucoes, power_axis,
-            to_values_by_power(energia_by_sol),
-            "Energia total (kWh)",
-            "Energia × Solução (uma barra por potência)",
-            Path(out_root)/"comparacao_energia.png"
-        )
+        if _enabled("comparisons", charts) and _enabled("energy", metrics):
+            plot_grouped_bars_by_power(
+                labels_solucoes, power_axis,
+                to_values_by_power(energia_by_sol),
+                "Energia total (kWh)",
+                "Energia × Solução (uma barra por potência)",
+                Path(out_root)/"comparacao_energia.png"
+            )
 
-        # (2) LINHAS: Energia × Potência (uma curva por solução)
-        plot_xy_multi(
-            power_axis, energia_by_sol,
-            "Energia total (kWh)", "Energia × Potência",
-            Path(out_root)/"comparacao_energia_linhas.png"
-        )
+        if _enabled("per-solution", charts) and _enabled("energy", metrics):
+            plot_xy_multi(
+                power_axis, energia_by_sol,
+                "Energia total (kWh)", "Energia × Potência",
+                Path(out_root)/"comparacao_energia_linhas.png"
+            )
 
-        # (3) Scatter já existente (Energia × Delay – tamanho = Vazão)
-        plt.figure(figsize=(10,6))
-        sc = plt.scatter(scatter_E, scatter_D, s=scatter_S, c=scatter_C,
-                         cmap="tab10", alpha=0.8, edgecolors="k", linewidths=0.3)
-        import matplotlib.patches as mpatches
-        handles = [mpatches.Patch(color=plt.cm.tab10(idx), label=sol)
-                   for sol, idx in color_map.items()]
-        plt.legend(handles=handles, loc="lower right", title="Soluções")
-        plt.xlabel("Energia total (kWh)")
-        plt.ylabel("Delay médio (ms)")
-        plt.title("Eficiência: Energia × Delay (tamanho = Vazão em Mbps)")
-        plt.grid(True, linestyle=":")
-        plt.tight_layout()
-        plt.savefig(Path(out_root)/"comparacao_scatter_energia_delay_bolhas.png", dpi=300)
-        plt.close()
+        if _enabled("scatter", charts):
+            plt.figure(figsize=(10,6))
+            sc = plt.scatter(scatter_E, scatter_D, s=scatter_S, c=scatter_C,
+                             cmap="tab10", alpha=0.8, edgecolors="k", linewidths=0.3)
+            import matplotlib.patches as mpatches
+            handles = [mpatches.Patch(color=plt.cm.tab10(idx), label=sol)
+                       for sol, idx in color_map.items()]
+            plt.legend(handles=handles, loc="lower right", title="Soluções")
+            plt.xlabel("Energia total (kWh)")
+            plt.ylabel("Delay médio (ms)")
+            plt.title("Eficiência: Energia × Delay (tamanho = Vazão em Mbps)")
+            plt.grid(True, linestyle=":")
+            plt.tight_layout()
+            plt.savefig(Path(out_root)/"comparacao_scatter_energia_delay_bolhas.png", dpi=300)
+            plt.close()
 
 # ---------------------------
 # Main
@@ -450,6 +465,12 @@ def main():
     ap.add_argument("--toys", nargs="*", default=DEFAULT_TOYS)
     ap.add_argument("--out",  default=DEFAULT_OUT)
     ap.add_argument("--energy-cfg", help="Arquivo JSON com parâmetros energéticos (idle_power_w, alpha, beta, gamma, sim_time_s, delay_ref_ms, ...)")
+    # NOVO: filtros de métricas e de tipos de gráfico
+    ap.add_argument("--metrics", nargs="+", default=["all"], choices=["all"] + METRIC_CHOICES,
+                    help="Quais métricas gerar (ex.: throughput delay energy). Default: all")
+    ap.add_argument("--charts",  nargs="+", default=["per-solution","comparisons"],
+                    choices=CHART_CHOICES,
+                    help="Tipos de gráfico: per-solution (linhas), comparisons (barras), scatter")
     args = ap.parse_args()
 
     out_root = Path(args.out)
@@ -458,13 +479,19 @@ def main():
     energy_cfg = None
     if args.energy_cfg:
         energy_cfg = json.loads(Path(args.energy_cfg).read_text())
+    else:
+        if any(m in args.metrics for m in ["energy","efficiency","ieg"]):
+            print("[WARN] --energy-cfg não informado: métricas de energia/eficiência serão ignoradas.")
 
     topologies_data = []
     base = Path(args.base)
     for toy in args.toys:
-        topologies_data.append(process_topology(base/toy, ensure_dir(out_root/toy), energy_cfg))
+        td = process_topology(base/toy, ensure_dir(out_root/toy), energy_cfg,
+                              metrics=args.metrics, charts=args.charts)
+        if td: topologies_data.append(td)
 
-    comparisons_all_solutions([t for t in topologies_data if t], out_root, energy_cfg)
+    comparisons_all_solutions(topologies_data, out_root, energy_cfg,
+                              metrics=args.metrics, charts=args.charts)
 
 if __name__ == "__main__":
     main()

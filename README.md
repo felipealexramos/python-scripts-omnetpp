@@ -1,4 +1,181 @@
-# Projeto OMNeT++ / Simu5G + Simulações Sintéticas
+# Sistema Integrado de Gestão de Simulações e Experimentos em Redes Móveis sem fio com Foco em Eficiência Energética.
+
+## analisar_sca.py — Extração de métricas, gráficos e modelo de energia a partir de .sca
+
+Este script percorre pastas com resultados OMNeT++ (.sca), extrai métricas (vazão, delay, custo computacional), agrega por potência (dBm), e gera gráficos por solução e comparativos. Opcionalmente, aplica um modelo simples de potência/energia para estimar consumo e eficiência.
+
+### Requisitos
+
+- Python 3.8+
+- Pacotes:
+  - matplotlib
+  - numpy
+- Arquivos .sca com os resultados de cada cenário/potência.
+
+Instalação rápida dos pacotes:
+```bash
+pip install matplotlib numpy
+```
+
+### Estrutura de entrada
+
+- Base de simulações (default):  
+  `/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03`
+- Dentro da base, uma subpasta por “solução” (ex.: Toy1, Simulation1, …).
+- Dentro de cada subpasta, arquivos `.sca` contendo no NOME a potência em dBm, por exemplo:
+  - `..._10dBm.sca`
+  - `result_23dBm.sca`
+  - O padrão deve conter “XdBm” (somente inteiros), pois a potência é inferida do nome via regex `(\d+)dBm`.
+
+Exemplo:
+```
+application03/
+  Simulation1/
+    runA_10dBm.sca
+    runB_20dBm.sca
+  Simulation2/
+    exp_10dBm.sca
+    exp_20dBm.sca
+```
+
+### Saída
+
+- Pasta de saída (default):  
+  `/home/felipe/Documentos/tcc/omnet/ResultadosSCA/Graficos`
+
+Para cada solução (subpasta passada em `--toys`), o script cria:
+- `resumo_por_arquivo.json` — métricas de cada .sca.
+- `resumo_por_potencia.json` — métricas agregadas por potência (e energia/eficiência, se configurado).
+- Gráficos por solução:
+  - `potencia_vs_vazao.png`
+  - `potencia_vs_delay.png`
+  - `potencia_vs_custo.png`
+  - Se energia habilitada:
+    - `potencia_vs_energia_kwh.png`
+    - `potencia_vs_eficiencia.png`
+    - `potencia_vs_indice_eficiencia_global.png`
+
+Gráficos comparativos (na raiz da saída):
+- Barras: `comparacao_vazao.png`, `comparacao_delay.png`, `comparacao_custo.png`, `comparacao_energia.png`
+- Linhas: `comparacao_vazao_linhas.png`, `comparacao_delay_linhas.png`, `comparacao_custo_linhas.png`, `comparacao_energia_linhas.png`
+- Dispersão (bolhas): `comparacao_scatter_energia_delay_bolhas.png`
+
+### Funcionamento (pipeline)
+
+1. Busca `.sca` em cada subpasta de solução.
+2. Extrai:
+   - Vazão por UE: soma e normalização automática para Mbps.
+   - Delay por UE: média e normalização automática para ms.
+   - Custo computacional (CNProcDemand:mean) por gNB: média e soma.
+   - Potência (dBm): inferida do nome do arquivo (ex.: “10dBm”).
+3. Agrega por potência (média dos runs).
+4. Opcional: calcula potência/energia/eficiência usando o JSON de energia.
+5. Gera JSONs de resumo e gráficos por solução e comparativos globais.
+
+Notas de unidade:
+- Vazão: se os valores aparentam estar em bps, são convertidos para Mbps; caso contrário, mantidos.
+- Delay: se aparenta estar em segundos, é convertido para ms; caso contrário, mantido.
+
+### Sobre nomes “ToyX” vs “SimulationX”
+
+- Você pode usar qualquer nome de subpasta (ex.: Simulation1..Simulation6).
+- Passe esses nomes em `--toys` ou altere o DEFAULT_TOYS no script.
+- O script salva as saídas em `<out>/<nome-da-solucao>` exatamente como informado.
+- O rótulo nos gráficos usa o nome normalizado:
+  - “ToyX” vira “SoluçãoX”; “SimulationX” permanece “SimulationX”.
+
+Renomeando de Toy1..Toy6 para Simulation1..Simulation6:
+- Basta rodar com `--toys Simulation1 Simulation2 ...` ou alterar `DEFAULT_TOYS` no arquivo.
+
+### Uso rápido
+
+Exemplos (Linux):
+
+- Usando padrões internos (edite DEFAULT_TOYS/BASE/OUT se quiser):
+```bash
+python3 analisar_sca.py
+```
+
+- Especificando base, saída e soluções “Simulation1..6”:
+```bash
+python3 analisar_sca.py \
+  --base /home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03 \
+  --out  /home/felipe/Documentos/tcc/omnet/ResultadosSCA/Graficos \
+  --toys Simulation1 Simulation2 Simulation3 Simulation4 Simulation5 Simulation6
+```
+
+- Selecionando métricas e tipos de gráfico:
+```bash
+python3 analisar_sca.py --toys Simulation1 Simulation2 \
+  --metrics throughput delay proc \
+  --charts per-solution comparisons
+```
+
+- Com modelo de energia:
+```bash
+python3 analisar_sca.py --toys Simulation1 Simulation2 \
+  --metrics energy efficiency ieg throughput delay \
+  --charts per-solution comparisons scatter \
+  --energy-cfg energy_config.json
+```
+
+Ajuda:
+```bash
+python3 analisar_sca.py -h
+```
+
+### Parâmetros
+
+- `--base` (str): pasta base com subpastas de soluções. Default no código.
+- `--toys` (lista): nomes das subpastas a processar (ex.: Simulation1 Simulation2 …).
+- `--out` (str): pasta raiz de saída dos gráficos/JSONs.
+- `--energy-cfg` (arquivo JSON): ativa e parametriza energia/eficiência.
+- `--metrics` (lista): quais métricas gerar. Opções:
+  - `throughput`, `delay`, `proc`, `energy`, `efficiency`, `ieg`, ou `all` (default).
+- `--charts` (lista): tipos de gráfico:
+  - `per-solution` (linhas), `comparisons` (barras), `scatter`.
+
+Observação: se solicitar métricas de energia/eficiência sem `--energy-cfg`, o script avisa e ignora essas métricas.
+
+### Configuração de energia (JSON)
+
+Estrutura esperada:
+```json
+{
+  "general": {
+    "idle_power_w": 50.0,
+    "alpha": 2.0,
+    "beta": 0.5,
+    "gamma": 1.0,
+    "sim_time_s": 20.0,
+    "delay_ref_ms": 10.0
+  },
+  "limits": {
+    "min_power_w": 10.0,
+    "max_power_w": 5000.0
+  }
+}
+```
+
+- Modelo:
+  - P_tot = P_idle + alpha*D_proc + beta*N_UE_ativos + gamma*P_Tx_W
+  - E_tot = P_tot * T_sim
+  - Eficiência = Throughput_Mbps / P_tot_W (Mbps/W)
+  - IEG = (Thp/E) * 1/(1 + Delay/D0)
+- P_Tx_W é derivada da potência (dBm) do nome do arquivo `.sca`.
+
+### Dicas e solução de problemas
+
+- “[WARN] Sem .sca em …”: verifique `--base`, o nome em `--toys` e se há arquivos `.sca`.
+- Potência não reconhecida: confirme “XdBm” no NOME do arquivo `.sca` (números inteiros).
+- Barras/gráficos vazios: pode não haver potência comum entre soluções; garanta que todas tenham os mesmos “XdBm”.
+- Falta de pacotes: instale `matplotlib` e `numpy`.
+
+### Licença
+
+Uso interno acadêmico. Ajuste conforme sua
+
+## Projeto OMNeT++ / Simu5G + Simulações
 
 Guia rápido para executar:
 - Simulações reais no OMNeT++/Simu5G, com análise automática dos .sca.
@@ -16,7 +193,7 @@ Sumário:
 
 ---
 
-## Estrutura do repositório
+### Estrutura do repositório
 
 - Run_Simulations_Simu5G/
   - run_simulations.py  → executa cenários no OMNeT++/Simu5G e analisa .sca
@@ -32,7 +209,7 @@ Sumário:
 
 ---
 
-## Pré-requisitos
+### Pré-requisitos
 
 - Linux com Python 3.10+.
 - OMNeT++ instalado (ex.: 6.1.x) e acessível em:
@@ -47,7 +224,7 @@ Se seus caminhos diferirem, ajuste as constantes no run_simulations.py:
 
 ---
 
-## Instalação e ambiente Pytho🚀 Iniciando simulações OMNeT++ para TX=26 dBm | repetições=5 | paralelismo=4
+### Instalação e ambiente Pytho🚀 Iniciando simulações OMNeT++ para TX=26 dBm | repetições=5 | paralelismo=4
 Simulações:   0%|                                                                                              | 0/5 [00:00<?, ?exec/s]▶️ TX=26dBm | Repetição=1 | Tentativa=1
 ▶️ TX=26dBm | Repetição=2 | Tentativa=1
 ▶️ TX=26dBm | Repetição=0 | Tentativa=1
@@ -90,7 +267,7 @@ deactivate
 
 ---
 
-## Execução (OMNeT++/Simu5G)
+### Execução (OMNeT++/Simu5G)
 
 Script principal:
 - Caminho: `Run_Simulations_Simu5G/run_simulations.py`
@@ -136,11 +313,11 @@ Atenção aos caminhos:
 
 ---
 
-## Simulações sintéticas (pasta Simulacoes)
+### Simulações sintéticas (pasta Simulacoes)
 
 Esses scripts não usam o OMNeT++; geram dados sintéticos, CSVs e gráficos diretamente.
 
-### toy1 — D-RAN puro: `Simulacoes/simulate_toy1.py`
+#### toy1 — D-RAN puro: `Simulacoes/simulate_toy1.py`
 
 Descrição:
 - Simula cenário “Solução 1” (todas as gNBs como D-RAN, CUs desligadas, sem CoMP).
@@ -170,7 +347,7 @@ Padrão de diretório:
 
 ---
 
-## Comparação entre cenários (toy1..toy6)
+### Comparação entre cenários (toy1..toy6)
 
 Script: `Simulacoes/simulate_compare.py`
 
@@ -202,7 +379,7 @@ Observações:
 
 ---
 
-## Solução de problemas
+### Solução de problemas
 
 - `ModuleNotFoundError: No module named 'pandas'`
   - Ative a venv e instale dependências:
@@ -227,7 +404,7 @@ Observações:
 
 ---
 
-## Comandos rápidos (resumo)
+### Comandos rápidos (resumo)
 
 ```bash
 # 0) Ambiente

@@ -6,14 +6,7 @@
     "custo_computacional_gops_media_gnb": 103.94317329747709,
     "custo_computacional_gops_soma": 1247.3180795697251,
     "ues_ativos_medios": 34.0,
-    "gnb_count": 12,
-    "P_tot_W": 1383.3274329848543,
-    "E_tot_J": 27666.548659697088,
-    "E_tot_kWh": 0.007685152405471413,
-    "eff_mbps_per_joule": 0.01162768829451538,
-    "P_tx_W": 0.003981071705534973,
-    "sim_time_s": 20.0,
-    "global_eff_index": 2.9981809367526077e-06
+    "gnb_count": 12
   },
   {
     "potencia_dbm": 16,
@@ -22,14 +15,7 @@
     "custo_computacional_gops_media_gnb": 80.34657086190109,
     "custo_computacional_gops_soma": 964.158850342813,
     "ues_ativos_medios": 34.0,
-    "gnb_count": 12,
-    "P_tot_W": 1185.1589681004355,
-    "E_tot_J": 23703.17936200871,
-    "E_tot_kWh": 0.006584216489446864,
-    "eff_mbps_per_joule": 0.014709023067125534,
-    "P_tx_W": 0.039810717055349734,
-    "sim_time_s": 20.0,
-    "global_eff_index": 3.968196698239359e-06
+    "gnb_count": 12
   },
   {
     "potencia_dbm": 26,
@@ -38,14 +24,7 @@
     "custo_computacional_gops_media_gnb": 76.92789971747341,
     "custo_computacional_gops_soma": 923.134796609681,
     "ues_ativos_medios": 35.0,
-    "gnb_count": 12,
-    "P_tot_W": 1157.172086231441,
-    "E_tot_J": 23143.44172462882,
-    "E_tot_kWh": 0.006428733812396894,
-    "eff_mbps_per_joule": 0.0163791403418015,
-    "P_tx_W": 0.3981071705534972,
-    "sim_time_s": 20.0,
-    "global_eff_index": 4.279180749964525e-06
+    "gnb_count": 12
   },
   {
     "potencia_dbm": 36,
@@ -54,14 +33,7 @@
     "custo_computacional_gops_media_gnb": 74.18131383283125,
     "custo_computacional_gops_soma": 890.175765993975,
     "ues_ativos_medios": 36.0,
-    "gnb_count": 12,
-    "P_tot_W": 1138.7003222424244,
-    "E_tot_J": 22774.006444848488,
-    "E_tot_kWh": 0.006326112901346802,
-    "eff_mbps_per_joule": 0.0138604277979996,
-    "P_tx_W": 3.9810717055349722,
-    "sim_time_s": 20.0,
-    "global_eff_index": 3.608155118720265e-06
+    "gnb_count": 12
   },
   {
     "potencia_dbm": 46,
@@ -70,14 +42,7 @@
     "custo_computacional_gops_media_gnb": 75.12724570660124,
     "custo_computacional_gops_soma": 901.526948479215,
     "ues_ativos_medios": 37.0,
-    "gnb_count": 12,
-    "P_tot_W": 1189.9417244018698,
-    "E_tot_J": 23798.834488037395,
-    "E_tot_kWh": 0.006610787357788165,
-    "eff_mbps_per_joule": 0.013902549394438232,
-    "P_tx_W": 39.810717055349734,
-    "sim_time_s": 20.0,
-    "global_eff_index": 3.628569416603717e-06
+    "gnb_count": 12
   },
   {
     "potencia_dbm": 56,
@@ -86,13 +51,6 @@
     "custo_computacional_gops_media_gnb": 73.80982883651849,
     "custo_computacional_gops_soma": 885.717946038222,
     "ues_ativos_medios": 37.0,
-    "gnb_count": 12,
-    "P_tot_W": 1608.831166890952,
-    "E_tot_J": 32176.62333781904,
-    "E_tot_kWh": 0.008937950927171956,
-    "eff_mbps_per_joule": 0.012020296348044822,
-    "P_tx_W": 398.1071705534973,
-    "sim_time_s": 20.0,
-    "global_eff_index": 3.1399620112747673e-06
+    "gnb_count": 12
   }
 ]
