@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # ---------------------------
 DEFAULT_BASE = "/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03"
 DEFAULT_OUT  = "/home/felipe/Documentos/tcc/omnet/ResultadosSCA/Graficos"
-DEFAULT_TOYS = ["Toy1","Toy2","Toy3","Toy4","Toy5","Toy6"]
+DEFAULT_SOLUTIONS = ["Solução1","Solução2","Solução3","Solução4","Solução5","Solução6"]
 
 # ---------------------------
 # Seletor de métricas/gráficos
@@ -81,10 +81,10 @@ def safe_mean(values, default=0.0):
     vals = _finite(values)
     return (sum(vals)/len(vals)) if vals else default
 
-def toy_to_solucao(name: str) -> str:
-    if name.lower().startswith("toy") and len(name) > 3 and name[3:].isdigit():
-        return f"Solução{name[3:]}"
-    return name.replace("Toy", "Solução")
+def solution_to_solucao(name: str) -> str:
+    if name.lower().startswith("solucao") and len(name) > 8 and name[8:].isdigit():
+        return f"Solução{name[8:]}"
+    return name.replace("Solução", "Solução")
 
 # ---------------------------
 # Parser .sca
@@ -284,7 +284,7 @@ def process_topology(topology_dir: Path, out_dir: Path, energy_cfg: dict | None,
         json.dump(table, f, indent=2, ensure_ascii=False)
 
     # Nome normalizado
-    name = toy_to_solucao(topology_dir.name)
+    name = solution_to_solucao(topology_dir.name)
 
     # --------- GRÁFICOS por solução (linhas) ----------
     if _enabled("per-solution", charts):
@@ -392,8 +392,8 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
         color_map = {sol: i for i, sol in enumerate(labels_solucoes)}
 
         for sol in labels_solucoes:
-            toy_dir = sol.replace("Solução", "Toy")
-            rjson = Path(out_root) / toy_dir / "resumo_por_potencia.json"
+            solution_dir = sol.replace("Solução", "Solução")
+            rjson = Path(out_root) / solution_dir / "resumo_por_potencia.json"
             if not rjson.exists():
                 continue
             rows = json.loads(rjson.read_text())
@@ -462,7 +462,7 @@ def comparisons_all_solutions(topologies_data, out_root: Path, energy_cfg: dict 
 def main():
     ap = argparse.ArgumentParser(description="Extrai métricas dos .sca, gera gráficos e calcula energia/eficiência.")
     ap.add_argument("--base", default=DEFAULT_BASE)
-    ap.add_argument("--toys", nargs="*", default=DEFAULT_TOYS)
+    ap.add_argument("--solutions", nargs="*", default=DEFAULT_SOLUTIONS)
     ap.add_argument("--out",  default=DEFAULT_OUT)
     ap.add_argument("--energy-cfg", help="Arquivo JSON com parâmetros energéticos (idle_power_w, alpha, beta, gamma, sim_time_s, delay_ref_ms, ...)")
     # NOVO: filtros de métricas e de tipos de gráfico
@@ -485,8 +485,8 @@ def main():
 
     topologies_data = []
     base = Path(args.base)
-    for toy in args.toys:
-        td = process_topology(base/toy, ensure_dir(out_root/toy), energy_cfg,
+    for solution in args.solutions:
+        td = process_topology(base/solution, ensure_dir(out_root/solution), energy_cfg,
                               metrics=args.metrics, charts=args.charts)
         if td: topologies_data.append(td)
 
