@@ -21,7 +21,7 @@ pip install matplotlib numpy
 
 - Base de simulações (default):  
   `/home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03`
-- Dentro da base, uma subpasta por “solução” (ex.: Toy1, Simulation1, …).
+- Dentro da base, uma subpasta por “solução” (ex.: Simulation1, …).
 - Dentro de cada subpasta, arquivos `.sca` contendo no NOME a potência em dBm, por exemplo:
   - `..._10dBm.sca`
   - `result_23dBm.sca`
@@ -43,7 +43,7 @@ application03/
 - Pasta de saída (default):  
   `/home/felipe/Documentos/tcc/omnet/ResultadosSCA/Graficos`
 
-Para cada solução (subpasta passada em `--toys`), o script cria:
+Para cada solução (subpasta passada em `--solutions`), o script cria:
 - `resumo_por_arquivo.json` — métricas de cada .sca.
 - `resumo_por_potencia.json` — métricas agregadas por potência (e energia/eficiência, se configurado).
 - Gráficos por solução:
@@ -76,22 +76,22 @@ Notas de unidade:
 - Vazão: se os valores aparentam estar em bps, são convertidos para Mbps; caso contrário, mantidos.
 - Delay: se aparenta estar em segundos, é convertido para ms; caso contrário, mantido.
 
-### Sobre nomes “ToyX” vs “SimulationX”
+### Sobre nomes “SolutionX” vs “SimulationX”
 
 - Você pode usar qualquer nome de subpasta (ex.: Simulation1..Simulation6).
-- Passe esses nomes em `--toys` ou altere o DEFAULT_TOYS no script.
+- Passe esses nomes em `--solutions` ou altere o DEFAULT_SOLUTIONS no script.
 - O script salva as saídas em `<out>/<nome-da-solucao>` exatamente como informado.
 - O rótulo nos gráficos usa o nome normalizado:
-  - “ToyX” vira “SoluçãoX”; “SimulationX” permanece “SimulationX”.
+  - “SolutionX” (termo preferido) é utilizado nos gráficos; “SimulationX” permanece “SimulationX”.
 
-Renomeando de Toy1..Toy6 para Simulation1..Simulation6:
-- Basta rodar com `--toys Simulation1 Simulation2 ...` ou alterar `DEFAULT_TOYS` no arquivo.
+Renomeando de Solution1..Solution6 para Simulation1..Simulation6:
+- Basta rodar com `--solutions Simulation1 Simulation2 ...` ou alterar `DEFAULT_SOLUTIONS` no arquivo.
 
 ### Uso rápido
 
 Exemplos (Linux):
 
-- Usando padrões internos (edite DEFAULT_TOYS/BASE/OUT se quiser):
+- Usando padrões internos (edite DEFAULT_SOLUTIONS/BASE/OUT se quiser):
 ```bash
 python3 analisar_sca.py
 ```
@@ -101,19 +101,19 @@ python3 analisar_sca.py
 python3 analisar_sca.py \
   --base /home/felipe/Documentos/tcc/omnet/simu5g/simulations/NR/application03 \
   --out  /home/felipe/Documentos/tcc/omnet/ResultadosSCA/Graficos \
-  --toys Simulation1 Simulation2 Simulation3 Simulation4 Simulation5 Simulation6
+  --solutions Simulation1 Simulation2 Simulation3 Simulation4 Simulation5 Simulation6
 ```
 
 - Selecionando métricas e tipos de gráfico:
 ```bash
-python3 analisar_sca.py --toys Simulation1 Simulation2 \
+python3 analisar_sca.py --solutions Simulation1 Simulation2 \
   --metrics throughput delay proc \
   --charts per-solution comparisons
 ```
 
 - Com modelo de energia:
 ```bash
-python3 analisar_sca.py --toys Simulation1 Simulation2 \
+python3 analisar_sca.py --solutions Simulation1 Simulation2 \
   --metrics energy efficiency ieg throughput delay \
   --charts per-solution comparisons scatter \
   --energy-cfg energy_config.json
@@ -127,7 +127,7 @@ python3 analisar_sca.py -h
 ### Parâmetros
 
 - `--base` (str): pasta base com subpastas de soluções. Default no código.
-- `--toys` (lista): nomes das subpastas a processar (ex.: Simulation1 Simulation2 …).
+- `--solutions` (lista): nomes das subpastas a processar (ex.: Simulation1 Simulation2 …).
 - `--out` (str): pasta raiz de saída dos gráficos/JSONs.
 - `--energy-cfg` (arquivo JSON): ativa e parametriza energia/eficiência.
 - `--metrics` (lista): quais métricas gerar. Opções:
@@ -166,7 +166,7 @@ Estrutura esperada:
 
 ### Dicas e solução de problemas
 
-- “[WARN] Sem .sca em …”: verifique `--base`, o nome em `--toys` e se há arquivos `.sca`.
+- “[WARN] Sem .sca em …”: verifique `--base`, o nome em `--solutions` e se há arquivos `.sca`.
 - Potência não reconhecida: confirme “XdBm” no NOME do arquivo `.sca` (números inteiros).
 - Barras/gráficos vazios: pode não haver potência comum entre soluções; garanta que todas tenham os mesmos “XdBm”.
 - Falta de pacotes: instale `matplotlib` e `numpy`.
@@ -179,7 +179,7 @@ Uso interno acadêmico. Ajuste conforme sua
 
 Guia rápido para executar:
 - Simulações reais no OMNeT++/Simu5G, com análise automática dos .sca.
-- Simulações sintéticas (toy1..toy6) em Python, com geração de CSVs e gráficos.
+- Simulações sintéticas (solution1..solution6) em Python, com geração de CSVs e gráficos.
 - Comparação entre cenários a partir dos resultados gerados.
 
 Sumário:
@@ -188,7 +188,7 @@ Sumário:
 - [Instalação e ambiente Python](#instalação-e-ambiente-python)
 - [Execução (OMNeT++/Simu5G)](#execução-omnet++simu5g)
 - [Simulações sintéticas (pasta Simulacoes)](#simulações-sintéticas-pasta-simulacoes)
-- [Comparação entre cenários (toy1..toy6)](#comparação-entre-cenários-toy1toy6)
+- [Comparação entre cenários (solution1..solution6)](#comparação-entre-cenários-solution1solution6)
 - [Solução de problemas](#solução-de-problemas)
 
 ---
@@ -198,10 +198,10 @@ Sumário:
 - Run_Simulations_Simu5G/
   - run_simulations.py  → executa cenários no OMNeT++/Simu5G e analisa .sca
 - Simulacoes/
-  - simulate_toy1.py    → simulação sintética (Solução 1: D-RAN) e gráficos
-  - simulate_compare.py → consolida e compara resultados (toy1..toy6)
+  - simulate_solution1.py    → simulação sintética (Solução 1: D-RAN) e gráficos
+  - simulate_compare.py → consolida e compara resultados (solution1..solution6)
 - Topologias/Resultados/
-  - Topologia1/...      → saída padrão do toy1 (com timestamp)
+  - Topologia1/...      → saída padrão do solution1 (com timestamp)
   - Comparacoes/...     → saída da comparação entre cenários
 - simu5g/               → projeto Simu5G (esperado já compilado)
 - inet4.5/              → dependência do Simu5G (esperada)
@@ -224,27 +224,7 @@ Se seus caminhos diferirem, ajuste as constantes no run_simulations.py:
 
 ---
 
-### Instalação e ambiente Pytho🚀 Iniciando simulações OMNeT++ para TX=26 dBm | repetições=5 | paralelismo=4
-Simulações:   0%|                                                                                              | 0/5 [00:00<?, ?exec/s]▶️ TX=26dBm | Repetição=1 | Tentativa=1
-▶️ TX=26dBm | Repetição=2 | Tentativa=1
-▶️ TX=26dBm | Repetição=0 | Tentativa=1
-▶️ TX=26dBm | Repetição=3 | Tentativa=1
-Simulações:  20%|█████████████████                                                                    | 1/5 [03:16<13:07, 196.78s/exec]▶️ TX=26dBm | Repetição=4 | Tentativa=1
-Simulações: 100%|██████████████████████████████████████████████████████████████████████████████████████| 5/5 [05:50<00:00, 70.10s/exec]
-
-✅ Simulações finalizadas.
-📄 Resumo: /home/felipe/Documentos/tcc/omnet/simu5g/results/NR/application02/TrainingToy1_1/Pot26/status.json
-⚠️ Falhas: Nenhuma falha registrada.
-📈 Iniciando análise dos resultados (.sca)...
-Traceback (most recent call last):
-  File "/home/felipe/Documentos/tcc/omnet/Run_Simulations_Simu5G/run_simulations.py", line 347, in <module>
-    analyze_results()
-  File "/home/felipe/Documentos/tcc/omnet/Run_Simulations_Simu5G/run_simulations.py", line 265, in analyze_results
-    with pd.ExcelWriter(xlsx_path, engine="xlsxwriter") as writer:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/felipe/Documentos/tcc/omnet/.venv/lib/python3.12/site-packages/pandas/io/excel/_xlsxwriter.py", line 197, in __init__
-    from xlsxwriter import Workbook
-ModuleNotFoundError: No module named 'xlsxwriter'n
+### Instalação e ambiente Python
 
 Recomendado usar venv no diretório do projeto:
 
@@ -293,10 +273,10 @@ O que o script faz:
 - Monta o comando do `opp_run` aplicando:
   - `--*.gnb[*].cellularNic.phy.eNodeBTxPower=<TX>dBm`
   - `--**.ueTxPower=<TX>dBm`
-- Usa a configuração `TrainingToy1_1` do arquivo:
-  - `simu5g/simulations/NR/application02/training_toy1_1.ini`
+- Usa a configuração `TrainingSolution1_1` do arquivo:
+  - `simu5g/simulations/NR/application02/training_solution1_1.ini`
 - Organiza saídas por potência:
-  - `simu5g/results/NR/application02/TrainingToy1_1/Pot<TX>/...`
+  - `simu5g/results/NR/application02/TrainingSolution1_1/Pot<TX>/...`
 - Cria logs por repetição em:
   - `.../Pot<TX>/logs/log_TX<TX>_R<rep>.txt`
 - Tenta até 3 vezes por repetição se não aparecer o `.sca` esperado.
@@ -309,7 +289,7 @@ O que o script faz:
 
 Atenção aos caminhos:
 - Se o `opp_run` não for encontrado, ajuste `OMNETPP_BIN_DIR`.
-- Se a `libsimu5g.so` ou `libINET.so` não for carregada, verifique os caminhos `-l` no script e se o projeto foi compilado (Modo release).
+- Se a `libsimu5g.so` ou `libINET.so` não forem carregadas, verifique os caminhos `-l` no script e se o projeto foi compilado (Modo release).
 
 ---
 
@@ -317,7 +297,7 @@ Atenção aos caminhos:
 
 Esses scripts não usam o OMNeT++; geram dados sintéticos, CSVs e gráficos diretamente.
 
-#### toy1 — D-RAN puro: `Simulacoes/simulate_toy1.py`
+#### solution1 — D-RAN puro: `Simulacoes/simulate_solution1.py`
 
 Descrição:
 - Simula cenário “Solução 1” (todas as gNBs como D-RAN, CUs desligadas, sem CoMP).
@@ -326,36 +306,36 @@ Descrição:
 Execução:
 ```bash
 # Exemplo com saída padrão (Topologia1) e potências definidas
-python3 Simulacoes/simulate_toy1.py --tx 20,23,26,29,32
+python3 Simulacoes/simulate_solution1.py --tx 20,23,26,29,32
 
 # Exemplo definindo a pasta base de saída
-python3 Simulacoes/simulate_toy1.py \
+python3 Simulacoes/simulate_solution1.py \
   --outdir /home/felipe/Documentos/tcc/omnet/Topologias/Resultados/Topologia1 \
   --tx 20,23,26,29,32
 ```
 
 Saídas (com timestamp):
-- `resultados_toy1_detalhado.csv`
-- `resultados_toy1_resumo_por_potencia.csv`
-- `energia_vs_potencia_toy1.png`
-- `eficiencia_vs_potencia_toy1.png`
-- `stack_energy_breakdown_toy1.png`
-- `metadata_toy1.json`
+- `resultados_solution1_detalhado.csv`
+- `resultados_solution1_resumo_por_potencia.csv`
+- `energia_vs_potencia_solution1.png`
+- `eficiencia_vs_potencia_solution1.png`
+- `stack_energy_breakdown_solution1.png`
+- `metadata_solution1.json`
 
 Padrão de diretório:
-- `/home/felipe/Documentos/tcc/omnet/Topologias/Resultados/Topologia1/toy1_<timestamp>/...`
+- `/home/felipe/Documentos/tcc/omnet/Topologias/Resultados/Topologia1/solution1_<timestamp>/...`
 
 ---
 
-### Comparação entre cenários (toy1..toy6)
+### Comparação entre cenários (solution1..solution6)
 
 Script: `Simulacoes/simulate_compare.py`
 
 Descrição:
-- Procura automaticamente pelos CSVs de resumo de cada toyN:
-  - `Topologias/Resultados/Topologia*/toyN_*/resultados_toyN_resumo_por_potencia.csv`
+- Procura automaticamente pelos CSVs de resumo de cada solutionN:
+  - `Topologias/Resultados/Topologia*/solutionN_*/resultados_solutionN_resumo_por_potencia.csv`
 - Consolida, gera comparações e gráficos agregados.
-- Se toy1 estiver presente, calcula economia (%) de energia em relação ao D-RAN puro.
+- Se solution1 estiver presente, calcula economia (%) de energia em relação ao D-RAN puro.
 
 Execução sugerida:
 ```bash
@@ -370,12 +350,12 @@ Saídas:
 - `throughput_vs_potencia_comparacao.png`
 - `eficiencia_vs_potencia_comparacao.png`
 - `pareto_energia_throughput.png`
-- `economia_percentual_vs_toy1.csv` (se toy1 encontrado)
-- `economia_percentual_vs_toy1.png` (se aplicável)
+- `economia_percentual_vs_solution1.csv` (se solution1 encontrado)
+- `economia_percentual_vs_solution1.png` (se aplicável)
 
 Observações:
-- Se algum toyN não for encontrado, ele será ignorado com aviso.
-- O script usa o resultado mais recente de cada toy (pelo mtime).
+- Se algum solutionN não for encontrado, ele será ignorado com aviso.
+- O script usa o resultado mais recente de cada solution (pelo mtime).
 
 ---
 
@@ -413,8 +393,8 @@ source .venv/bin/activate
 python -m pip install -U pip
 python -m pip install pandas numpy matplotlib tqdm xlsxwriter
 
-# 1) Simulação sintética (toy1)
-python3 Simulacoes/simulate_toy1.py --tx 20,23,26,29,32
+# 1) Simulação sintética (solution1)
+python3 Simulacoes/simulate_solution1.py --tx 20,23,26,29,32
 
 # 2) Comparar cenários (usando resultados existentes)
 python3 Simulacoes/simulate_compare.py --root Topologias/Resultados --outdir Topologias/Resultados/Comparacoes
